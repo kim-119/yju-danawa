@@ -1,0 +1,38 @@
+실행시각: 2026-03-02 19:40:49
+ebook_total_timeout_sec=10
+
+============================================================
+  도서관 실물 도서 크롤러
+============================================================
+
+▶ 이펙티브 자바 [ISBN]
+  {"found": true, "available": true, "status_text": "AVAILABLE", "overall_status": "대출가능", "matched_title": "이펙티브 자바 :프로그래밍인사이트 조슈아 블로크 인사이트, 2018", "row_count": 1, "error_message": ""}
+
+▶ 이펙티브 자바 [제목]
+  {"found": true, "available": true, "status_text": "AVAILABLE", "overall_status": "대출가능", "matched_title": "이펙티브 자바 :프로그래밍인사이트 조슈아 블로크 인사이트, 2018", "row_count": 4, "error_message": ""}
+
+▶ 클린 코드 [제목]
+  {"found": true, "available": true, "status_text": "AVAILABLE", "overall_status": "대출가능", "matched_title": "클린 코드의 기술 :단순함의 노하우 메이어, 크리스찬 영진닷컴, 2023", "row_count": 5, "error_message": ""}
+
+▶ 자바의 정석 [제목]
+  {"found": true, "available": true, "status_text": "AVAILABLE", "overall_status": "대출가능", "matched_title": "Java의 정석 남궁성 도우출판, 2025", "row_count": 1, "error_message": ""}
+
+▶ 없는 책 [제목]
+  {"found": false, "available": false, "status_text": "UNKNOWN", "overall_status": "정보없음", "matched_title": "", "row_count": 0, "error_message": ""}
+
+============================================================
+  전자책 크롤러  (ebook.yjc.ac.kr)
+============================================================
+  ebook_base_url = https://ebook.yjc.ac.kr
+
+▶ 이펙티브 자바 [전자책]
+  {"found": false, "total_holdings": 0, "available_holdings": 0, "status_text": "미소장", "error_message": ""}
+
+▶ 클린 코드 [전자책]
+  {"found": false, "total_holdings": 0, "available_holdings": 0, "status_text": "미소장", "error_message": ""}
+
+▶ 자바의 정석 [전자책]
+  {"found": false, "total_holdings": 0, "available_holdings": 0, "status_text": "미소장", "error_message": ""}
+
+▶ 없는 책 [전자책]
+  {"found": false, "total_holdings": 0, "available_holdings": 0, "status_text": "미소장", "error_message": ""}

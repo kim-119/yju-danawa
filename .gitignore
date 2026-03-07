@@ -1,0 +1,65 @@
+# IDE
+.idea/
+.vscode/
+.claude/
+*.iws
+*.iml
+*.ipr
+
+# Git backup
+.git_backup/
+
+# Build
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Gradle
+.gradle/
+.gradle-user/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Env / Secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Misc text logs
+check.txt
+docker_ps.txt
+ps2.txt
+sclog.txt
+start_log.txt
+start_log2.txt
+com/cache_log.txt
+com/cnt2.txt
+com/final_timing.txt
+com/precache_test.txt
+com/proto_check.txt
+com/ps_f.txt
+com/ps_final.txt
+com/scraper_log.txt
+com/scraper_log2.txt
+com/scraper_log_v2.txt
+com/scrlog.txt
+com/slog.txt
+com/speed.txt
+com/speed_test.txt
+com/status.txt
+com/.git_backup/
+

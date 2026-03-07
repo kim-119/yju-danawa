@@ -1,0 +1,146 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ydanawa-db
+    environment:
+      POSTGRES_DB: ydanawa_db
+      POSTGRES_PASSWORD: "0910"
+      POSTGRES_USER: root
+    ports:
+      - "5433:5432" # 호스트 접근용(디버깅/psql). 컨테이너 간 통신은 5432 사용
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d ydanawa_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - ydanawa-network
+
+  library-scraper:
+    build:
+      context: ./library-scraper
+      dockerfile: Dockerfile
+      network: host
+    container_name: ydanawa-library-scraper
+    ports:
+      - "8090:8090"
+      - "9090:9090"
+    env_file:
+      - ./library-scraper/.env
+    environment:
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 9090
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 8090
+
+      # ✅ 내부통신 기준값(컨테이너 간 호출에서 안전)
+      SCRAPER_PUBLIC_BASE_URL: ${SCRAPER_PUBLIC_BASE_URL:-http://library-scraper:8090}
+
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
+      ALADIN_TTB_KEY: ${ALADIN_TTB_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+
+      PLACEHOLDER_IMAGE_URL: https://placehold.co/120x174?text=%EC%9D%B4%EB%AF%B8%EC%A7%80%20%EC%A4%80%EB%B9%84%20%EC%A4%91
+      SCRAPER_IMAGE_DIR: /app/image-crawler
+
+      EBOOK_BASE_URL: https://ebook.yjc.ac.kr
+      ALLOWED_EBOOK_HOSTS: ebook.yjc.ac.kr
+      EBOOK_CACHE_TTL_SEC: 900
+      EBOOK_TOTAL_TIMEOUT_SEC: 40
+      PLAYWRIGHT_HARD_TIMEOUT_MS: 20000
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      - ./image-crawler:/app/image-crawler
+    restart: unless-stopped
+    networks:
+      - ydanawa-network
+    healthcheck:
+      # grpc 서버가 응답할 때까지 대기
+      test: ["CMD", "python", "-c", "import grpc; ch=grpc.insecure_channel('localhost:9090'); ch.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    container_name: ydanawa-backend
+    environment:
+      # ✅ 컨테이너 간 통신: db 서비스명 + 5432
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ydanawa_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "0910"
+
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      ALADIN_TTB_KEY: ${ALADIN_TTB_KEY:-}
+      PLACEHOLDER_IMAGE_URL: https://placehold.co/120x174?text=%EC%9D%B4%EB%AF%B8%EC%A7%80%20%EC%A4%80%EB%B9%84%20%EC%A4%91
+
+      # ✅ 컨테이너 간 통신은 "서비스명"이 가장 안전
+      APP_GRPC_HOST: library-scraper
+      APP_GRPC_PORT: 9090
+
+      CRAWLER_OUT: /app/image-crawler
+    depends_on:
+      db:
+        condition: service_healthy
+      library-scraper:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./image-crawler:/app/image-crawler
+    healthcheck:
+      # ⚠ curl이 컨테이너에 없으면 무조건 실패.
+      # 아래 Dockerfile(런타임 curl 설치)과 세트로 사용.
+      test: ["CMD-SHELL", "curl -fsS 'http://localhost:8080/api/books/infinite?page=0&size=1' -o /dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - ydanawa-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      network: host
+    container_name: ydanawa-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - ydanawa-network
+
+volumes:
+  pgdata:
+
+networks:
+  ydanawa-network:
+    driver: bridge

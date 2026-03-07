@@ -1,0 +1,13 @@
+제목: '이펙티브 자바'
+
+[현재(%20)]  url=https://lib.yju.ac.kr/Cheetah/Search/AdvenceSearch#/total/%C0%CC%C6%E5%C6%BC%BA%EA%20%C0%DA%B9%D9
+  bookinfo=0  ❌ 실패
+
+[공백제거]  url=https://lib.yju.ac.kr/Cheetah/Search/AdvenceSearch#/total/%C0%CC%C6%E5%C6%BC%BA%EA%C0%DA%B9%D9
+  bookinfo=0  ❌ 실패
+
+[+(plus)]  url=https://lib.yju.ac.kr/Cheetah/Search/AdvenceSearch#/total/%C0%CC%C6%E5%C6%BC%BA%EA+%C0%DA%B9%D9
+  bookinfo=0  ❌ 실패
+
+[UTF-8(%20)]  url=https://lib.yju.ac.kr/Cheetah/Search/AdvenceSearch#/total/%EC%9D%B4%ED%8E%99%ED%8B%B0%EB%B8%8C%20%EC%9E%90%EB%B0%94
+  bookinfo=4  ✅ 동작!

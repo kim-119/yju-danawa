@@ -1,0 +1,22 @@
+﻿# library-scraper Python 의존성
+# Python 3.11 기준, Windows 개발 / Linux(Docker) 프로덕션 모두 지원
+# 설치: pip install -r requirements.txt
+# 브라우저: python -m playwright install chromium
+
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+playwright==1.41.0
+pydantic==2.5.3
+
+# grpcio 버전은 반드시 생성된 pb2 파일과 맞춰야 한다.
+# library_pb2.py      : protobuf 6.31.1 로 생성됨
+# library_pb2_grpc.py : grpcio>=1.78.1 요구
+grpcio==1.78.1
+grpcio-tools==1.78.1
+protobuf>=6.31.1,<7.0
+
+python-dotenv==1.0.1
+httpx==0.27.0
+
+# uvloop: Linux/macOS 전용 (Docker 프로덕션 환경에서만 설치됨)
+uvloop>=0.19.0; sys_platform != "win32"

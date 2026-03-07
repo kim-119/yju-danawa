@@ -1,0 +1,73 @@
+﻿git : warning: in the working copy of 'START.bat', LF will be replaced by CRLF the next time Git touches it
+위치 줄:1 문자:39
++ cd C:\yjudanawa-damo\yjudanawa-damo ; git add -A 2>&1 | Out-File C:\y ...
++                                       ~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'com/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/.gitattributes', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/build.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/frontend/nginx.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/frontend/scripts/book_image_crawler.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/frontend/scripts/books.csv', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/gradle/wrapper/gradle-wrapper.properties', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-loan-crawler/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-loan-crawler/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-loan-crawler/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/Dockerfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/ENV_SECURITY.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/app_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/config.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/ebook_scraper.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/image_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/run_servers.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/scripts/verify-check-ebook.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/test_library_parsers.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/test_library_snapshot_parser.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/test_live.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/test_status_decision.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/tests/fixtures/library_ebook_only.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/library-scraper/tests/fixtures/library_mixed_results.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/settings.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/ComApplication.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/config/ApiTrailingSlashNormalizeFilter.java', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/domain/BookImage.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/domain/BookRecord.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/dto/BookSearchItemDto.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/repository/BookImageRepository.java', LF will be replaced by CRLF the next time Git touches 
+it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/repository/BookRecordRepository.java', LF will be replaced by CRLF the next time Git touches
+ it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/BookImageSearchService.java', LF will be replaced by CRLF the next time Git touches 
+it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/BookImageService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/BookService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/CrawlerImageFileService.java', LF will be replaced by CRLF the next time Git touches
+ it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/EbookLibraryService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/ExternalBookService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/LibraryGrpcClient.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/LibraryRateLimiter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/service/LibraryStatusMapper.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/util/IsbnLinks.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/web/BookImageController.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/web/GrpcBookController.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/java/yju/danawa/com/web/WebConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/proto/library.proto', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/resources/schema.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/main/resources/search_tuning.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/test/java/yju/danawa/com/ComApplicationTests.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/test/java/yju/danawa/com/service/IsbnConversionTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'com/src/test/java/yju/danawa/com/service/LibraryStatusMapperTest.java', LF will be replaced by CRLF the next time Git touches
+ it
+warning: in the working copy of 'com/src/test/java/yju/danawa/com/web/BookControllerJavaSearchTest.java', LF will be replaced by CRLF the next time Git touche
+s it
