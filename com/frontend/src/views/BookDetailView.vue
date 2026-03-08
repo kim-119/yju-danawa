@@ -43,7 +43,7 @@
           </div>
 
           <!-- 도서관 상태 배지 -->
-          <div class="mt-4">
+          <div class="mt-4 flex items-center gap-3">
             <span v-if="book.library?.holding === true">
               <span v-if="book.library?.status === 'AVAILABLE'" class="badge-available text-sm px-3 py-1">
                 ✓ 대출 가능
@@ -55,6 +55,20 @@
             <span v-else class="badge-unknown text-sm px-3 py-1">
               미소장
             </span>
+
+            <!-- 장바구니 추가 버튼 -->
+            <button
+              v-if="auth.isLoggedIn"
+              @click="addToCart"
+              :disabled="cartAdding"
+              class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100
+                     rounded-full text-sm font-semibold transition-colors disabled:opacity-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              {{ cartAdding ? '담는 중...' : '장바구니 담기' }}
+            </button>
           </div>
 
           <!-- 구매 링크 -->
@@ -311,6 +325,37 @@
         </div>
       </div>
 
+      <!-- 📊 체감 난이도 히트맵 -->
+      <div class="card p-5 mt-4">
+        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span class="w-5 h-5 text-indigo-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </span>
+          독자 체감 난이도
+        </h2>
+        <div v-if="heatmapLoading" class="h-32 flex items-center justify-center">
+          <div class="animate-pulse text-gray-400 text-sm">분석 데이터 로딩 중...</div>
+        </div>
+        <div v-else-if="hasHeatmapData" class="space-y-3">
+          <div v-for="level in [5, 4, 3, 2, 1]" :key="level" class="flex items-center gap-3">
+            <span class="w-16 text-xs text-gray-500 font-medium">{{ difficultyLabel(level) }}</span>
+            <div class="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-indigo-500 transition-all duration-1000"
+                :style="{ width: heatmapPercentage(level) + '%' }"
+              ></div>
+            </div>
+            <span class="w-8 text-xs text-gray-400 text-right">{{ heatmap[level] || 0 }}</span>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-2 text-center">리뷰 텍스트 키워드 분석 결과입니다.</p>
+        </div>
+        <div v-else class="py-8 text-center text-gray-400 text-sm">
+          아직 난이도 분석 데이터가 없습니다.
+        </div>
+      </div>
+
       <div class="card p-5 mt-4">
         <h2 class="font-bold text-gray-900 mb-4">댓글</h2>
 
@@ -402,6 +447,54 @@ const descExpanded = ref(false)
 const tocExpanded = ref(false)
 const placeholder = 'https://placehold.co/300x440?text=No+Cover'
 
+const cartAdding = ref(false)
+const heatmap = ref({})
+const heatmapLoading = ref(false)
+
+const hasHeatmapData = computed(() => {
+  return Object.values(heatmap.value).some(count => count > 0)
+})
+
+function difficultyLabel(level) {
+  const labels = { 5: '매우 어려움', 4: '어려움', 3: '보통', 2: '쉬움', 1: '매우 쉬움' }
+  return labels[level] || '알 수 없음'
+}
+
+function heatmapPercentage(level) {
+  const counts = Object.values(heatmap.value)
+  const total = counts.reduce((a, b) => a + b, 0)
+  if (total === 0) return 0
+  return ((heatmap.value[level] || 0) / total) * 100
+}
+
+async function addToCart() {
+  if (!auth.isLoggedIn) {
+    alert('로그인 후 이용 가능합니다.')
+    return
+  }
+  cartAdding.value = true
+  try {
+    await api.addToCart(isbn13)
+    alert('장바구니에 담았습니다.')
+  } catch {
+    alert('장바구니 담기에 실패했습니다.')
+  } finally {
+    cartAdding.value = false
+  }
+}
+
+async function fetchHeatmap(isbn) {
+  heatmapLoading.value = true
+  try {
+    const { data } = await api.getDifficultyHeatmap(isbn)
+    heatmap.value = data || {}
+  } catch {
+    heatmap.value = {}
+  } finally {
+    heatmapLoading.value = false
+  }
+}
+
 const hasDetailContent = computed(() => {
   if (!detailInfo.value) return false
   const d = detailInfo.value
@@ -453,6 +546,8 @@ async function fetchDetail() {
     fetchComments(isbn13)
     // 책 소개 정보 (알라딘 상세) 비동기 로드
     fetchDetailInfo(isbn13)
+    // 난이도 히트맵 로드
+    fetchHeatmap(isbn13)
   } catch {
     error.value = true
   } finally {

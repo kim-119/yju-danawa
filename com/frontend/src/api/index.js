@@ -104,6 +104,28 @@ export default {
     return api.get('/users/me')
   },
 
+  getMyRecentBooks() {
+    return api.get('/users/me/recent-books')
+  },
+
+  // ── 장바구니 ───────────────────────────────────────────
+  getCart() {
+    return api.get('/cart')
+  },
+
+  addToCart(bookId, quantity = 1) {
+    return api.post('/cart', { bookId, quantity })
+  },
+
+  removeFromCart(bookId) {
+    return api.delete(`/cart/${bookId}`)
+  },
+
+  // ── 분석 (히트맵 등) ──────────────────────────────────
+  getDifficultyHeatmap(bookId) {
+    return api.get(`/books/${bookId}/difficulty-heatmap`)
+  },
+
   // ── 독서 일지 ──────────────────────────────────────────
   getReadingLogs() {
     return api.get('/reading-logs')
