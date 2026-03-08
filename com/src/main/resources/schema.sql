@@ -154,3 +154,31 @@ CREATE INDEX IF NOT EXISTS idx_book_comment_likes_comment_id
     ON book_comment_likes(comment_id);
 CREATE INDEX IF NOT EXISTS idx_book_comment_likes_user_id
     ON book_comment_likes(user_id);
+
+-- =============================================
+-- 장바구니 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS cart_items (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    book_id     VARCHAR(32) NOT NULL REFERENCES books(isbn) ON DELETE CASCADE,
+    quantity    INTEGER NOT NULL DEFAULT 1,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_cart_items_user_book UNIQUE (user_id, book_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+
+-- =============================================
+-- 리뷰 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS reviews (
+    id          BIGSERIAL PRIMARY KEY,
+    book_id     VARCHAR(32) NOT NULL REFERENCES books(isbn) ON DELETE CASCADE,
+    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    content     VARCHAR(1000) NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_book_id ON reviews(book_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);

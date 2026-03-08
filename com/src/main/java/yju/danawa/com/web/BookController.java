@@ -27,6 +27,8 @@ import yju.danawa.com.service.LibraryRateLimiter;
 import yju.danawa.com.service.LibraryStatusMapper;
 import yju.danawa.com.service.PopularSearchService;
 import yju.danawa.com.service.YjuLibraryService;
+import yju.danawa.com.util.SecurityUtil;
+import yju.danawa.com.service.BookRecentlyViewedService;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +56,8 @@ public class BookController {
     private final LibraryStatusMapper libraryStatusMapper;
     private final LibraryRateLimiter libraryRateLimiter;
     private final PopularSearchService popularSearchService;
+    private final SecurityUtil securityUtil;
+    private final BookRecentlyViewedService bookRecentlyViewedService;
 
     public BookController(
             BookService bookService,
@@ -65,7 +69,9 @@ public class BookController {
             LibraryGrpcClient libraryGrpcClient,
             LibraryStatusMapper libraryStatusMapper,
             LibraryRateLimiter libraryRateLimiter,
-            PopularSearchService popularSearchService
+            PopularSearchService popularSearchService,
+            SecurityUtil securityUtil,
+            BookRecentlyViewedService bookRecentlyViewedService
     ) {
         this.bookService = bookService;
         this.externalBookService = externalBookService;
@@ -77,6 +83,8 @@ public class BookController {
         this.libraryStatusMapper = libraryStatusMapper;
         this.libraryRateLimiter = libraryRateLimiter;
         this.popularSearchService = popularSearchService;
+        this.securityUtil = securityUtil;
+        this.bookRecentlyViewedService = bookRecentlyViewedService;
     }
 
     // Lightweight search endpoint (Danawa-style list page).
@@ -155,6 +163,11 @@ public class BookController {
         if (!libraryRateLimiter.allow(rateKey)) {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "book-detail rate limited");
         }
+
+        // 로그인된 사용자라면 최근 본 도서에 추가
+        securityUtil.getCurrentUserId().ifPresent(userId -> {
+            bookRecentlyViewedService.addRecentBook(userId, normalized);
+        });
 
         // 로컬 DB에 없으면 외부 API(알라딘·카카오·구글)에서 ISBN으로 조회
         BookDto book = bookService.findByIsbn13(normalized).orElseGet(() -> {
