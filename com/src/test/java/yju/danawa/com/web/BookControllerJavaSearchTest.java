@@ -13,6 +13,8 @@ import yju.danawa.com.service.LibraryRateLimiter;
 import yju.danawa.com.service.LibraryStatusMapper;
 import yju.danawa.com.service.PopularSearchService;
 import yju.danawa.com.service.YjuLibraryService;
+import yju.danawa.com.util.SecurityUtil;
+import yju.danawa.com.service.BookRecentlyViewedService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +41,8 @@ class BookControllerJavaSearchTest {
         LibraryStatusMapper libraryStatusMapper = mock(LibraryStatusMapper.class);
         LibraryRateLimiter libraryRateLimiter = mock(LibraryRateLimiter.class);
         PopularSearchService popularSearchService = mock(PopularSearchService.class);
+        SecurityUtil securityUtil = mock(SecurityUtil.class);
+        BookRecentlyViewedService bookRecentlyViewedService = mock(BookRecentlyViewedService.class);
 
         when(bookService.searchWithFallback("자바")).thenReturn(new BookService.SearchResult(List.of(
                 new BookDto("9788960777330", "자바의 정석", "남궁성", "도우출판", "/images/a.png", LocalDate.of(2019, 11, 29), 30000.0),
@@ -55,7 +60,9 @@ class BookControllerJavaSearchTest {
                 libraryGrpcClient,
                 libraryStatusMapper,
                 libraryRateLimiter,
-                popularSearchService
+                popularSearchService,
+                securityUtil,
+                bookRecentlyViewedService
         );
 
         @SuppressWarnings("unchecked")
@@ -79,6 +86,8 @@ class BookControllerJavaSearchTest {
         LibraryStatusMapper libraryStatusMapper = mock(LibraryStatusMapper.class);
         LibraryRateLimiter libraryRateLimiter = mock(LibraryRateLimiter.class);
         PopularSearchService popularSearchService = mock(PopularSearchService.class);
+        SecurityUtil securityUtil = mock(SecurityUtil.class);
+        BookRecentlyViewedService bookRecentlyViewedService = mock(BookRecentlyViewedService.class);
         HttpServletRequest request = mock(HttpServletRequest.class);
 
         String isbn13 = "9788960777330";
@@ -99,6 +108,7 @@ class BookControllerJavaSearchTest {
                 ));
         when(libraryStatusMapper.normalize(true, true, "AVAILABLE", null))
                 .thenReturn(new LibraryStatusMapper.NormalizedStatus(true, true, "AVAILABLE", "대출 가능"));
+        when(securityUtil.getCurrentUserId()).thenReturn(Optional.empty());
 
         BookController controller = new BookController(
                 bookService,
@@ -110,7 +120,9 @@ class BookControllerJavaSearchTest {
                 libraryGrpcClient,
                 libraryStatusMapper,
                 libraryRateLimiter,
-                popularSearchService
+                popularSearchService,
+                securityUtil,
+                bookRecentlyViewedService
         );
 
         BookController.BookDetailResponse response = controller.getBookDetail(isbn13, request);
