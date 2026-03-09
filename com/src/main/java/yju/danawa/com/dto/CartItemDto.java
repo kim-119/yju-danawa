@@ -8,6 +8,7 @@ public record CartItemDto(
         String title,
         String author,
         String imageUrl,
+        Double price,
         Integer quantity,
         LocalDateTime createdAt
 ) {

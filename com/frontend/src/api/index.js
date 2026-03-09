@@ -57,20 +57,25 @@ export default {
     return api.get('/books/infinite', { params: { cursor, limit } })
   },
 
-  getBookComments(isbn13) {
-    return api.get(`/books/${isbn13}/comments`)
+  // ── 리뷰 (댓글 통합) ──────────────────────────────────
+  getReviews(bookId) {
+    return api.get(`/books/${bookId}/reviews`)
   },
 
-  createBookComment(isbn13, content) {
-    return api.post(`/books/${isbn13}/comments`, { content })
+  createReview(bookId, content, rating = 3) {
+    return api.post(`/books/${bookId}/reviews`, { content, rating })
   },
 
-  deleteBookComment(isbn13, commentId) {
-    return api.delete(`/books/${isbn13}/comments/${commentId}`)
+  deleteReview(bookId, reviewId) {
+    return api.delete(`/books/${bookId}/reviews/${reviewId}`)
   },
 
-  toggleBookCommentLike(isbn13, commentId) {
-    return api.post(`/books/${isbn13}/comments/${commentId}/like`)
+  toggleReviewLike(bookId, reviewId) {
+    return api.post(`/books/${bookId}/reviews/${reviewId}/like`)
+  },
+
+  getDifficultyHeatmap(bookId) {
+    return api.get(`/books/${bookId}/difficulty-heatmap`)
   },
 
   // ── 공지사항 배너 ─────────────────────────────────────
@@ -118,12 +123,7 @@ export default {
   },
 
   removeFromCart(bookId) {
-    return api.delete(`/cart/${bookId}`)
-  },
-
-  // ── 분석 (히트맵 등) ──────────────────────────────────
-  getDifficultyHeatmap(bookId) {
-    return api.get(`/books/${bookId}/difficulty-heatmap`)
+    return api.delete(`/cart/${encodeURIComponent(bookId)}`)
   },
 
   // ── 독서 일지 ──────────────────────────────────────────
@@ -132,7 +132,6 @@ export default {
   },
 
   createReadingLog(data) {
-    // data: { bookTitle, isbn?, pagesRead?, memo?, logDate: 'YYYY-MM-DD' }
     return api.post('/reading-logs', data)
   },
 

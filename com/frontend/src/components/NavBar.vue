@@ -44,8 +44,25 @@
         <!-- 우측 메뉴 -->
         <nav class="flex items-center gap-1 sm:gap-2">
           <template v-if="auth.isLoggedIn">
+            <!-- 장바구니 아이콘 -->
             <RouterLink
-              to="/profile"
+              to="/my"
+              class="relative flex items-center text-blue-100 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              title="장바구니 / 마이페이지"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3c-.6.6-.2 1.7.7 1.7H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              <span v-if="cartCount > 0"
+                    class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-yju-accent text-white text-[9px] font-bold
+                           rounded-full flex items-center justify-center leading-none">
+                {{ cartCount > 9 ? '9+' : cartCount }}
+              </span>
+            </RouterLink>
+            <!-- 프로필 -->
+            <RouterLink
+              to="/my"
               class="flex items-center gap-1.5 text-blue-100 hover:text-white text-sm px-2 py-1.5 rounded-lg
                      hover:bg-white/10 transition-colors"
             >
@@ -104,14 +121,31 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/api'
 
-const auth   = useAuthStore()
-const router = useRouter()
-const route  = useRoute()
+const auth    = useAuthStore()
+const router  = useRouter()
+const route   = useRoute()
 const keyword = ref(route.query.q || '')
+const cartCount = ref(0)
+
+async function fetchCartCount() {
+  if (!auth.isLoggedIn) { cartCount.value = 0; return }
+  try {
+    const { data } = await api.getCart()
+    cartCount.value = Array.isArray(data) ? data.length : 0
+  } catch {
+    cartCount.value = 0
+  }
+}
+
+onMounted(fetchCartCount)
+// 로그인 상태 변화 및 라우트 이동 시 갱신
+watch(() => auth.isLoggedIn, fetchCartCount)
+watch(() => route.path, fetchCartCount)
 
 function doSearch() {
   if (!keyword.value.trim()) return
@@ -120,6 +154,7 @@ function doSearch() {
 
 function logout() {
   auth.logout()
+  cartCount.value = 0
   router.push('/')
 }
 </script>

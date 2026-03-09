@@ -7,6 +7,7 @@ public record AladinItem(
         String cover,
         String isbn,
         String isbn13,
-        Integer priceSales
+        Integer priceSales,
+        Integer priceStandard
 ) {
 }

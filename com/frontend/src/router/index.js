@@ -43,6 +43,12 @@ const routes = [
     component: () => import('@/views/UsedMarketView.vue')
   },
   {
+    path: '/my',
+    name: 'mypage',
+    component: () => import('@/views/MyPageView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/market/write',
     name: 'market-write',
     component: () => import('@/views/UsedMarketWriteView.vue'),

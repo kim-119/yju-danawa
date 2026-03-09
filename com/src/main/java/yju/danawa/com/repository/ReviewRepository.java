@@ -6,5 +6,5 @@ import yju.danawa.com.domain.Review;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    List<Review> findByBookId(String bookId);
+    List<Review> findByBookIdOrderByCreatedAtDesc(String bookId);
 }

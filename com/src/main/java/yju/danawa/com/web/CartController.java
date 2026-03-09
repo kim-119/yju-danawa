@@ -39,14 +39,24 @@ public class CartController {
         return cartItemService.getCartItems(userId);
     }
 
+    @PutMapping("/{bookId}")
+    public List<CartItemDto> updateQuantity(@PathVariable String bookId, @RequestBody CartUpdateRequest request) {
+        Long userId = securityUtil.getCurrentUserId()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
+
+        cartItemService.updateQuantity(userId, bookId, request.quantity());
+        return cartItemService.getCartItems(userId);
+    }
+
     @DeleteMapping("/{bookId}")
     public List<CartItemDto> removeFromCart(@PathVariable String bookId) {
         Long userId = securityUtil.getCurrentUserId()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
-        
+
         cartItemService.removeFromCart(userId, bookId);
         return cartItemService.getCartItems(userId);
     }
 
     public record CartAddRequest(String bookId, Integer quantity) {}
+    public record CartUpdateRequest(int quantity) {}
 }

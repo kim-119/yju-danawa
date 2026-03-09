@@ -356,64 +356,87 @@
         </div>
       </div>
 
+      <!-- 💬 리뷰 섹션 (댓글 통합) -->
       <div class="card p-5 mt-4">
-        <h2 class="font-bold text-gray-900 mb-4">댓글</h2>
+        <h2 class="font-bold text-gray-900 mb-4">리뷰 및 댓글</h2>
 
-        <div v-if="commentsLoading" class="space-y-2 mb-4">
+        <div v-if="reviewsLoading" class="space-y-2 mb-4">
           <div v-for="n in 3" :key="n" class="skeleton h-14 rounded-lg"></div>
         </div>
-        <div v-else-if="comments.length === 0" class="text-sm text-gray-400 mb-4">
-          첫 댓글을 남겨보세요.
+        <div v-else-if="reviews.length === 0" class="text-sm text-gray-400 mb-4">
+          첫 리뷰를 남겨보세요.
         </div>
         <div v-else class="space-y-3 mb-4">
-          <div v-for="c in comments" :key="c.id" class="border border-gray-200 rounded-lg p-3">
+          <div v-for="r in reviews" :key="r.id" class="border border-gray-200 rounded-lg p-3">
             <div class="flex items-center justify-between gap-2">
-              <p class="text-xs text-gray-500">
-                <span class="font-semibold text-gray-700">{{ c.username }}</span>
-                · {{ formatCommentDate(c.createdAt) }}
-              </p>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-gray-700">{{ r.username }}</span>
+                <span class="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">
+                  {{ difficultyLabel(r.rating) }}
+                </span>
+                <span class="text-[10px] text-gray-400">{{ formatDate(r.createdAt) }}</span>
+              </div>
               <button
-                v-if="c.ownedByMe"
-                @click="deleteComment(c.id)"
+                v-if="r.ownedByMe"
+                @click="deleteReview(r.id)"
                 class="text-xs text-red-500 hover:text-red-600"
               >
                 삭제
               </button>
             </div>
-            <p class="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{{ c.content }}</p>
-            <div class="mt-2">
+            <p class="text-sm text-gray-800 mt-1.5 whitespace-pre-wrap">{{ r.content }}</p>
+            <div class="mt-3">
               <button
-                @click="toggleLike(c)"
-                class="text-xs px-2 py-1 rounded border"
-                :class="c.likedByMe ? 'border-pink-300 text-pink-600 bg-pink-50' : 'border-gray-300 text-gray-600'"
+                @click="toggleLike(r)"
+                class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border transition-all"
+                :class="r.likedByMe 
+                  ? 'border-pink-200 text-pink-600 bg-pink-50 font-bold' 
+                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'"
               >
-                좋아요 {{ c.likeCount || 0 }}
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" :fill="r.likedByMe ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                좋아요 {{ r.likeCount || 0 }}
               </button>
             </div>
           </div>
         </div>
 
-        <div v-if="auth.isLoggedIn" class="space-y-2">
+        <!-- 리뷰 작성 -->
+        <div v-if="auth.isLoggedIn" class="space-y-3 pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-gray-700">체감 난이도</span>
+            <div class="flex gap-1">
+              <button 
+                v-for="lv in [1, 2, 3, 4, 5]" :key="lv"
+                @click="reviewRating = lv"
+                class="text-xs px-2 py-1 rounded transition-colors"
+                :class="reviewRating === lv ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+              >
+                {{ difficultyLabel(lv) }}
+              </button>
+            </div>
+          </div>
           <textarea
-            v-model="commentInput"
+            v-model="reviewInput"
             rows="3"
             maxlength="1000"
-            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-            placeholder="댓글을 입력하세요 (최대 1000자)"
+            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            placeholder="도서에 대한 솔직한 리뷰를 남겨주세요."
           />
           <div class="flex items-center justify-between">
-            <p class="text-xs text-gray-400">{{ commentInput.length }}/1000</p>
+            <p class="text-xs text-gray-400">{{ reviewInput.length }}/1000</p>
             <button
-              @click="submitComment"
-              :disabled="commentSubmitting || !commentInput.trim()"
-              class="btn-primary text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="submitReview"
+              :disabled="reviewSubmitting || !reviewInput.trim()"
+              class="btn-primary text-sm px-6 py-2 disabled:opacity-50"
             >
-              {{ commentSubmitting ? '등록 중...' : '댓글 등록' }}
+              {{ reviewSubmitting ? '등록 중...' : '리뷰 등록' }}
             </button>
           </div>
         </div>
-        <div v-else class="text-sm text-gray-500">
-          댓글 작성과 좋아요는 로그인 후 이용할 수 있습니다.
+        <div v-else class="text-sm text-gray-500 py-4 text-center bg-gray-50 rounded-lg">
+          리뷰 작성과 좋아요는 로그인 후 이용할 수 있습니다.
         </div>
       </div>
 
@@ -437,10 +460,14 @@ const error    = ref(false)
 const prices   = ref([])
 const pricesLoading = ref(false)
 const ebookLoading = ref(false)
-const comments = ref([])
-const commentsLoading = ref(false)
-const commentInput = ref('')
-const commentSubmitting = ref(false)
+
+// 리뷰/댓글 통합 상태
+const reviews = ref([])
+const reviewsLoading = ref(false)
+const reviewInput = ref('')
+const reviewRating = ref(3)
+const reviewSubmitting = ref(false)
+
 const detailInfo = ref(null)
 const detailInfoLoading = ref(false)
 const descExpanded = ref(false)
@@ -541,12 +568,9 @@ async function fetchDetail() {
     const { data } = await api.getBookDetail(isbn13)
     book.value = data
     fetchPrices(isbn13, data.title)
-    // 전자책 정보를 별도로 비동기 로드 (도서 상세 먼저 표시)
     fetchEbook(isbn13)
-    fetchComments(isbn13)
-    // 책 소개 정보 (알라딘 상세) 비동기 로드
+    fetchReviews(isbn13)
     fetchDetailInfo(isbn13)
-    // 난이도 히트맵 로드
     fetchHeatmap(isbn13)
   } catch {
     error.value = true
@@ -563,7 +587,6 @@ async function fetchEbook(isbn) {
       book.value = { ...book.value, ebook: data }
     }
   } catch {
-    // 전자책 로드 실패 시 기존 데이터 유지
   } finally {
     ebookLoading.value = false
   }
@@ -593,64 +616,68 @@ async function fetchPrices(isbn, title) {
   }
 }
 
-async function fetchComments(isbn) {
-  commentsLoading.value = true
+// 리뷰 통합 조회
+async function fetchReviews(isbn) {
+  reviewsLoading.value = true
   try {
-    const { data } = await api.getBookComments(isbn)
-    comments.value = data || []
+    const { data } = await api.getReviews(isbn)
+    reviews.value = data || []
   } catch {
-    comments.value = []
+    reviews.value = []
   } finally {
-    commentsLoading.value = false
+    reviewsLoading.value = false
   }
 }
 
-async function submitComment() {
+async function submitReview() {
   if (!auth.isLoggedIn) {
-    alert('로그인 후 댓글을 작성할 수 있습니다.')
+    alert('로그인 후 리뷰를 작성할 수 있습니다.')
     return
   }
-  const content = commentInput.value.trim()
+  const content = reviewInput.value.trim()
   if (!content) return
 
-  commentSubmitting.value = true
+  reviewSubmitting.value = true
   try {
-    await api.createBookComment(isbn13, content)
-    commentInput.value = ''
-    await fetchComments(isbn13)
+    await api.createReview(isbn13, content, reviewRating.value)
+    reviewInput.value = ''
+    reviewRating.value = 3
+    await fetchReviews(isbn13)
+    await fetchHeatmap(isbn13) // 난이도 통계 갱신
   } catch {
-    alert('댓글 등록에 실패했습니다.')
+    alert('리뷰 등록에 실패했습니다.')
   } finally {
-    commentSubmitting.value = false
+    reviewSubmitting.value = false
   }
 }
 
-async function toggleLike(comment) {
+async function toggleLike(review) {
   if (!auth.isLoggedIn) {
     alert('로그인 후 좋아요를 누를 수 있습니다.')
     return
   }
   try {
-    const { data } = await api.toggleBookCommentLike(isbn13, comment.id)
-    comment.likedByMe = data.liked
-    comment.likeCount = data.likeCount
+    const { data } = await api.toggleReviewLike(isbn13, review.id)
+    review.likedByMe = data.liked
+    review.likeCount = data.likeCount
   } catch {
     alert('좋아요 처리에 실패했습니다.')
   }
 }
 
-async function deleteComment(commentId) {
+async function deleteReview(reviewId) {
   if (!auth.isLoggedIn) return
-  if (!confirm('댓글을 삭제할까요?')) return
+  if (!confirm('리뷰를 삭제할까요?')) return
   try {
-    await api.deleteBookComment(isbn13, commentId)
-    comments.value = comments.value.filter(c => c.id !== commentId)
+    await api.deleteReview(isbn13, reviewId)
+    reviews.value = reviews.value.filter(r => r.id !== reviewId)
+    await fetchHeatmap(isbn13) // 통계 갱신
   } catch {
-    alert('댓글 삭제에 실패했습니다.')
+    alert('리뷰 삭제에 실패했습니다.')
   }
 }
 
-function formatCommentDate(v) {
+function formatDate(v) {
   if (!v) return ''
   const d = new Date(v)
   if (Number.isNaN(d.getTime())) return v

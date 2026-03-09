@@ -127,58 +127,29 @@ CREATE TABLE IF NOT EXISTS used_book_images (
 CREATE INDEX IF NOT EXISTS idx_ubi_used_book_id ON used_book_images(used_book_id);
 
 -- =============================================
--- 도서 상세 댓글/좋아요 테이블
--- =============================================
-CREATE TABLE IF NOT EXISTS book_comments (
-    id          BIGSERIAL PRIMARY KEY,
-    isbn13      VARCHAR(13) NOT NULL,
-    content     VARCHAR(1000) NOT NULL,
-    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    username    VARCHAR(64) NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_book_comments_isbn13_created
-    ON book_comments(isbn13, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_book_comments_user_id ON book_comments(user_id);
-
-CREATE TABLE IF NOT EXISTS book_comment_likes (
-    id          BIGSERIAL PRIMARY KEY,
-    comment_id  BIGINT NOT NULL REFERENCES book_comments(id) ON DELETE CASCADE,
-    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_book_comment_like_comment_user UNIQUE (comment_id, user_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_book_comment_likes_comment_id
-    ON book_comment_likes(comment_id);
-CREATE INDEX IF NOT EXISTS idx_book_comment_likes_user_id
-    ON book_comment_likes(user_id);
-
--- =============================================
--- 장바구니 테이블
--- =============================================
-CREATE TABLE IF NOT EXISTS cart_items (
-    id          BIGSERIAL PRIMARY KEY,
-    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    book_id     VARCHAR(32) NOT NULL REFERENCES books(isbn) ON DELETE CASCADE,
-    quantity    INTEGER NOT NULL DEFAULT 1,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_cart_items_user_book UNIQUE (user_id, book_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
-
--- =============================================
--- 리뷰 테이블
+-- 리뷰(댓글 통합) 테이블
 -- =============================================
 CREATE TABLE IF NOT EXISTS reviews (
     id          BIGSERIAL PRIMARY KEY,
     book_id     VARCHAR(32) NOT NULL REFERENCES books(isbn) ON DELETE CASCADE,
     user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    username    VARCHAR(64) NOT NULL,
     content     VARCHAR(1000) NOT NULL,
+    rating      INTEGER DEFAULT 3, -- 1~5점 (난이도/평점 통합용)
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_reviews_book_id ON reviews(book_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_book_id_created ON reviews(book_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
+
+-- 리뷰 좋아요 테이블
+CREATE TABLE IF NOT EXISTS review_likes (
+    id          BIGSERIAL PRIMARY KEY,
+    review_id   BIGINT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_review_like_review_user UNIQUE (review_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_likes_review_id ON review_likes(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_likes_user_id ON review_likes(user_id);

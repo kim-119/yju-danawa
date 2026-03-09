@@ -30,6 +30,16 @@ public class CartItemService {
                 );
     }
 
+    @Transactional
+    public void updateQuantity(Long userId, String bookId, Integer quantity) {
+        if (quantity <= 0) {
+            cartItemRepository.deleteByUserIdAndBookId(userId, bookId);
+            return;
+        }
+        cartItemRepository.findByUserIdAndBookId(userId, bookId)
+                .ifPresent(item -> item.setQuantity(quantity));
+    }
+
     public List<CartItemDto> getCartItems(Long userId) {
         return cartItemRepository.findByUserId(userId).stream()
                 .map(this::toDto)
@@ -44,6 +54,7 @@ public class CartItemService {
                 book != null ? book.title() : "알 수 없는 도서",
                 book != null ? book.author() : "",
                 book != null ? book.imageUrl() : null,
+                book != null ? book.price() : null,
                 item.getQuantity(),
                 item.getCreatedAt()
         );
