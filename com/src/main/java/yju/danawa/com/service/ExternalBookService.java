@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.netty.http.client.HttpClient;
 import yju.danawa.com.dto.BookDto;
 import yju.danawa.com.service.dto.AladinItemSearchResponse;
+import yju.danawa.com.service.dto.AladinLookupResponse;
 import yju.danawa.com.service.dto.KakaoBookResponse;
 
 import java.time.Duration;
@@ -381,6 +382,51 @@ public class ExternalBookService {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * 알라딘 ItemLookup API로 ISBN 기반 상세 정보 조회
+     * (설명, 목차, 페이지수, 카테고리, 출판일, 정가/판매가 등)
+     */
+    @Cacheable(cacheNames = "aladinLookup", key = "#isbn13")
+    public AladinLookupResponse.AladinLookupItem lookupAladin(String isbn13) {
+        if (aladinTtbKey == null || aladinTtbKey.isBlank()) {
+            log.warn("알라딘 API 키가 설정되지 않아 상세 조회 불가");
+            return null;
+        }
+        if (isbn13 == null || isbn13.isBlank()) {
+            return null;
+        }
+
+        try {
+            log.debug("알라딘 ItemLookup API 호출: isbn13={}", isbn13);
+            AladinLookupResponse response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("http")
+                            .host("www.aladin.co.kr")
+                            .path("/ttb/api/ItemLookUp.aspx")
+                            .queryParam("ttbkey", aladinTtbKey)
+                            .queryParam("itemIdType", "ISBN13")
+                            .queryParam("ItemId", isbn13)
+                            .queryParam("Cover", "Big")
+                            .queryParam("output", "js")
+                            .queryParam("Version", "20131101")
+                            .queryParam("OptResult", "Toc,packing")
+                            .build())
+                    .header("User-Agent", COMMON_UA)
+                    .header("Accept", "application/json,text/plain,*/*")
+                    .retrieve()
+                    .bodyToMono(AladinLookupResponse.class)
+                    .block();
+
+            if (response != null && response.item() != null && !response.item().isEmpty()) {
+                log.info("알라딘 상세 조회 성공: isbn13={}", isbn13);
+                return response.item().get(0);
+            }
+        } catch (Exception e) {
+            log.warn("알라딘 상세 조회 실패: isbn13={}, {}", isbn13, e.getMessage());
+        }
+        return null;
     }
 
     private List<BookDto> mergeByPriority(List<BookDto> primary, List<BookDto> secondary, List<BookDto> tertiary) {

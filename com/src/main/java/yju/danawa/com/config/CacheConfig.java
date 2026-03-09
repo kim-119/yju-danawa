@@ -16,7 +16,7 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager manager = new CaffeineCacheManager(
-                "books", "externalBooks", "users", "yjuLibrary", "popularBooks"
+                "books", "externalBooks", "aladinLookup", "users", "yjuLibrary", "popularBooks"
         );
         manager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(1000)

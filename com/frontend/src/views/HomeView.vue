@@ -53,6 +53,21 @@
       </div>
     </section>
 
+    <!-- 실시간 인기 검색어 -->
+    <section class="page-container py-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-1">
+          <PopularSearch />
+        </div>
+        <div class="md:col-span-2 flex flex-col gap-3">
+          <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
+            <p class="text-xs text-gray-400 font-medium mb-1">이용 안내</p>
+            <p class="text-sm text-gray-600">도서명 또는 저자명으로 검색하면 인기 검색어 순위에 반영됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 소장 도서 -->
     <section class="bg-white border-t border-gray-100">
       <div class="page-container py-8">
@@ -97,6 +112,9 @@
       </div>
     </section>
 
+    <!-- 학과별 중고 서적 -->
+    <DeptCategoryTabs />
+
     <!-- 독서 일지 -->
     <section class="bg-gray-50 border-t border-gray-100">
       <div class="page-container py-8">
@@ -140,6 +158,8 @@ import { useRouter } from 'vue-router'
 import api from '@/api'
 import NoticeBanner from '@/components/NoticeBanner.vue'
 import ReadingCalendar from '@/components/ReadingCalendar.vue'
+import PopularSearch from '@/components/PopularSearch.vue'
+import DeptCategoryTabs from '@/components/DeptCategoryTabs.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router  = useRouter()

@@ -11,6 +11,7 @@ import yju.danawa.com.service.ExternalBookService;
 import yju.danawa.com.service.LibraryGrpcClient;
 import yju.danawa.com.service.LibraryRateLimiter;
 import yju.danawa.com.service.LibraryStatusMapper;
+import yju.danawa.com.service.PopularSearchService;
 import yju.danawa.com.service.YjuLibraryService;
 
 import java.time.LocalDate;
@@ -36,11 +37,12 @@ class BookControllerJavaSearchTest {
         EbookLibraryService ebookLibraryService = mock(EbookLibraryService.class);
         LibraryStatusMapper libraryStatusMapper = mock(LibraryStatusMapper.class);
         LibraryRateLimiter libraryRateLimiter = mock(LibraryRateLimiter.class);
+        PopularSearchService popularSearchService = mock(PopularSearchService.class);
 
-        when(bookService.search("자바")).thenReturn(List.of(
+        when(bookService.searchWithFallback("자바")).thenReturn(new BookService.SearchResult(List.of(
                 new BookDto("9788960777330", "자바의 정석", "남궁성", "도우출판", "/images/a.png", LocalDate.of(2019, 11, 29), 30000.0),
                 new BookDto("9788960777330", "자바의 정석", "남궁성", "도우출판", "/images/b.png", LocalDate.of(2019, 11, 29), 30000.0)
-        ));
+        ), false));
         when(externalBookService.search("자바", "auto")).thenReturn(List.of());
 
         BookController controller = new BookController(
@@ -52,7 +54,8 @@ class BookControllerJavaSearchTest {
                 ebookLibraryService,
                 libraryGrpcClient,
                 libraryStatusMapper,
-                libraryRateLimiter
+                libraryRateLimiter,
+                popularSearchService
         );
 
         @SuppressWarnings("unchecked")
@@ -75,6 +78,7 @@ class BookControllerJavaSearchTest {
         EbookLibraryService ebookLibraryService = mock(EbookLibraryService.class);
         LibraryStatusMapper libraryStatusMapper = mock(LibraryStatusMapper.class);
         LibraryRateLimiter libraryRateLimiter = mock(LibraryRateLimiter.class);
+        PopularSearchService popularSearchService = mock(PopularSearchService.class);
         HttpServletRequest request = mock(HttpServletRequest.class);
 
         String isbn13 = "9788960777330";
@@ -105,7 +109,8 @@ class BookControllerJavaSearchTest {
                 ebookLibraryService,
                 libraryGrpcClient,
                 libraryStatusMapper,
-                libraryRateLimiter
+                libraryRateLimiter,
+                popularSearchService
         );
 
         BookController.BookDetailResponse response = controller.getBookDetail(isbn13, request);

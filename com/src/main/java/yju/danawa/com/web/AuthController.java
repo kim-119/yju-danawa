@@ -85,6 +85,34 @@ public class AuthController {
         return new LoginResponse(saved.getUsername(), "ok", token, userProfileService.getRoleNames(saved.getUserId()));
     }
 
+    /** 아이디 찾기: 학번 + 이름 → 마스킹된 아이디 반환 */
+    @PostMapping("/find-username")
+    public java.util.Map<String, String> findUsername(@Valid @RequestBody FindUsernameRequest request) {
+        String username = userService.findUsernameByStudentIdAndFullName(request.studentId(), request.fullName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "일치하는 계정을 찾을 수 없습니다."));
+        return java.util.Map.of("maskedUsername", maskUsername(username));
+    }
+
+    /** 비밀번호 재설정: 아이디 + 학번 검증 후 새 비밀번호로 변경 */
+    @PostMapping("/reset-password")
+    public java.util.Map<String, String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        boolean ok = userService.resetPassword(
+                request.username(), request.studentId(), request.newPassword(), passwordEncoder);
+        if (!ok) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 학번이 올바르지 않습니다.");
+        }
+        return java.util.Map.of("message", "비밀번호가 변경되었습니다.");
+    }
+
+    private String maskUsername(String username) {
+        int len = username.length();
+        if (len <= 1) return "*";
+        if (len == 2) return username.charAt(0) + "*";
+        int showStart = Math.max(1, (int) Math.ceil(len / 3.0));
+        int maskLen   = Math.max(1, len - showStart - 1);
+        return username.substring(0, showStart) + "*".repeat(maskLen) + username.charAt(len - 1);
+    }
+
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {

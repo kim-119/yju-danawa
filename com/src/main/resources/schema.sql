@@ -87,3 +87,70 @@ CREATE TABLE IF NOT EXISTS reading_logs (
 
 CREATE INDEX IF NOT EXISTS idx_reading_logs_user_date ON reading_logs(user_id, log_date);
 
+-- =============================================
+-- 중고 마켓 판매 게시글 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS used_books (
+    id              BIGSERIAL PRIMARY KEY,
+    title           VARCHAR(255) NOT NULL,
+    author          VARCHAR(255),
+    price_won       INTEGER,
+    description     VARCHAR(1000),
+    seller_username VARCHAR(255),
+    seller_id       BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
+    isbn            VARCHAR(32),
+    image_url       VARCHAR(2048),
+    status          VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE',
+    department_id   BIGINT REFERENCES departments(id) ON DELETE SET NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 기존 used_books 테이블에 신규 컬럼이 없으면 추가 (마이그레이션 호환)
+ALTER TABLE used_books ADD COLUMN IF NOT EXISTS seller_id   BIGINT REFERENCES users(user_id) ON DELETE SET NULL;
+ALTER TABLE used_books ADD COLUMN IF NOT EXISTS status      VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE';
+
+CREATE INDEX IF NOT EXISTS idx_usedbook_dept    ON used_books(department_id);
+CREATE INDEX IF NOT EXISTS idx_usedbook_created ON used_books(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_usedbook_seller  ON used_books(seller_id);
+
+-- =============================================
+-- 중고 마켓 이미지 테이블 (파일은 로컬 /uploads/images에 저장)
+-- =============================================
+CREATE TABLE IF NOT EXISTS used_book_images (
+    id           BIGSERIAL PRIMARY KEY,
+    used_book_id BIGINT NOT NULL REFERENCES used_books(id) ON DELETE CASCADE,
+    file_name    VARCHAR(512) NOT NULL,
+    file_url     VARCHAR(1024) NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ubi_used_book_id ON used_book_images(used_book_id);
+
+-- =============================================
+-- 도서 상세 댓글/좋아요 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS book_comments (
+    id          BIGSERIAL PRIMARY KEY,
+    isbn13      VARCHAR(13) NOT NULL,
+    content     VARCHAR(1000) NOT NULL,
+    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    username    VARCHAR(64) NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_book_comments_isbn13_created
+    ON book_comments(isbn13, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_book_comments_user_id ON book_comments(user_id);
+
+CREATE TABLE IF NOT EXISTS book_comment_likes (
+    id          BIGSERIAL PRIMARY KEY,
+    comment_id  BIGINT NOT NULL REFERENCES book_comments(id) ON DELETE CASCADE,
+    user_id     BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_book_comment_like_comment_user UNIQUE (comment_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_book_comment_likes_comment_id
+    ON book_comment_likes(comment_id);
+CREATE INDEX IF NOT EXISTS idx_book_comment_likes_user_id
+    ON book_comment_likes(user_id);

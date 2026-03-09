@@ -33,6 +33,27 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/account-recovery',
+    name: 'account-recovery',
+    component: () => import('@/views/AccountRecoveryView.vue')
+  },
+  {
+    path: '/market',
+    name: 'market',
+    component: () => import('@/views/UsedMarketView.vue')
+  },
+  {
+    path: '/market/write',
+    name: 'market-write',
+    component: () => import('@/views/UsedMarketWriteView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/market/:id',
+    name: 'market-detail',
+    component: () => import('@/views/UsedMarketDetailView.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue')

@@ -13,6 +13,11 @@ spring:
       validation-timeout: ${SPRING_DATASOURCE_VALIDATION_TIMEOUT:5000}
       initialization-fail-timeout: ${SPRING_DATASOURCE_INIT_FAIL_TIMEOUT:-1}
 
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,6 +29,11 @@ spring:
   sql:
     init:
       mode: always
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
 
 app:
   api-key: ${APP_API_KEY:}
@@ -38,6 +48,8 @@ app:
     google-api-key: ${GOOGLE_API_KEY:}
     aladin-ttb-key: ${ALADIN_TTB_KEY:}
   placeholder-image-url: ${PLACEHOLDER_IMAGE_URL:https://placehold.co/120x174?text=%EC%9D%B4%EB%AF%B8%EC%A7%80+%EC%97%86%EC%9D%8C}
+  upload:
+    directory: ${UPLOAD_DIR:./uploads/images}
   jwt:
     secret: ${APP_JWT_SECRET:dev-secret-key-change-me-32bytes!!}
     expiration-minutes: ${APP_JWT_EXP_MINUTES:60}
@@ -62,6 +74,11 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:0910}
 
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: ${SPRING_REDIS_PORT:6379}
+
 app:
   grpc:
     # 컨테이너 간 통신은 서비스명으로
@@ -71,3 +88,6 @@ app:
   images:
     # 도커는 윈도우 경로 금지 → 리눅스 경로로
     directory: ${CRAWLER_OUT:/app/image-crawler}
+
+  upload:
+    directory: ${UPLOAD_DIR:/app/uploads/images}

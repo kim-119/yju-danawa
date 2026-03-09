@@ -92,15 +92,32 @@ public class BookPriceService {
             }
         }
 
+        // YES24 가격이 unavailable이면 알라딘 가격을 폴백으로 사용
+        BookPriceDto aladinPrice = prices.stream()
+                .filter(p -> "aladin".equals(p.store()) && p.available())
+                .findFirst().orElse(null);
+        if (aladinPrice != null) {
+            for (int i = 0; i < prices.size(); i++) {
+                BookPriceDto p = prices.get(i);
+                if ("yes24".equals(p.store()) && !p.available()) {
+                    String yes24Url = buildYes24Url(searchKey);
+                    prices.set(i, new BookPriceDto("yes24", "YES24",
+                            aladinPrice.price(), yes24Url, "무료배송", true));
+                    log.info("YES24 가격 폴백: 알라딘 가격 {}원 사용", aladinPrice.price());
+                }
+            }
+        }
+
         log.info("가격 조회 완료: {} 개 서점", prices.size());
         return prices;
     }
 
     private BookPriceDto fetchYes24Price(String query) {
-        String url = buildYes24Url(query);
+        String searchUrl = buildYes24Url(query);
         try {
             log.debug("YES24 가격 조회: {}", query);
-            Document doc = Jsoup.connect(url)
+
+            Document searchDoc = Jsoup.connect(searchUrl)
                 .userAgent(USER_AGENT)
                 .timeout(TIMEOUT_SECONDS * 1000)
                 .referrer("https://www.yes24.com")
@@ -108,44 +125,60 @@ public class BookPriceService {
                 .header("Accept-Language", "ko-KR,ko;q=0.9")
                 .get();
 
-            // YES24: 여러 선택자를 순서대로 시도 (사이트 구조 변경 대응)
-            String[] selectors = {
-                "span.opts_price em.yes_b",    // 최신 검색 결과 가격
-                "em.yes_b",                     // 가격 강조 텍스트
-                "span.price em",                // 일반 가격 구조
-                "strong.txt_num",               // 구 구조
-                "em.yes_m",                     // 구 구조 (할인가)
-                "span.txt_num em",              // 대체 가격 구조
-                "div.itemUnit span.price",      // 아이템 단위 가격
-                "li.clearfix span.price em"     // 리스트 아이템 가격
-            };
-
-            for (String selector : selectors) {
-                Element priceElement = doc.selectFirst(selector);
-                if (priceElement != null) {
-                    String priceText = priceElement.text().replaceAll("[^0-9]", "");
-                    if (!priceText.isEmpty()) {
-                        int price = Integer.parseInt(priceText);
-                        if (price > 0) {
-                            log.info("YES24 가격 발견 (selector={}): {}원", selector, price);
-                            return new BookPriceDto("yes24", "YES24", price, url, "무료배송", true);
-                        }
+            // ── Step 1: hidden input(ORD_GOODS_OPT)의 JSON에서 salePrice 추출 (가장 정확) ──
+            // YES24 검색 결과는 각 상품에 hidden input으로 정가/판매가 JSON을 포함
+            // 예: {"shopPrice":35000.00,"salePrice":31500.00,"discountShopPrice":3500.00}
+            Element goodsOpt = searchDoc.selectFirst("input[name=ORD_GOODS_OPT]");
+            if (goodsOpt != null) {
+                String jsonValue = goodsOpt.attr("value");
+                Matcher salePriceMatcher = Pattern.compile("\"salePrice\"\\s*:\\s*(\\d+(?:\\.\\d+)?)").matcher(jsonValue);
+                if (salePriceMatcher.find()) {
+                    int price = (int) Double.parseDouble(salePriceMatcher.group(1));
+                    if (price >= 1000 && price <= 500000) {
+                        // 상품 URL 추출 (소문자 /product/goods/)
+                        String goodsUrl = extractYes24GoodsUrl(searchDoc, searchUrl);
+                        log.info("YES24 가격 발견 (salePrice JSON): {}원", price);
+                        return new BookPriceDto("yes24", "YES24", price, goodsUrl, "무료배송", true);
                     }
                 }
             }
 
-            // Fallback: 정규식으로 가격 패턴 검색 (HTML 내에서 숫자,숫자원 패턴)
-            String html = doc.html();
-            Pattern pricePattern = Pattern.compile("(\\d{1,3}(?:,\\d{3})+)\\s*원");
-            Matcher matcher = pricePattern.matcher(html);
-            // 검색 결과 영역에서 첫 번째 가격 패턴 매칭
-            if (matcher.find()) {
-                String priceText = matcher.group(1).replaceAll("[^0-9]", "");
+            // ── Step 2: 검색 결과 목록의 info_price 영역에서 판매가 추출 ──
+            // YES24 검색 결과: <strong class="txt_num"><em class="yes_b">31,500</em>원</strong>
+            Element salePriceEl = searchDoc.selectFirst("div.info_price strong.txt_num em.yes_b");
+            if (salePriceEl != null) {
+                String priceText = salePriceEl.text().replaceAll("[^0-9]", "");
                 if (!priceText.isEmpty()) {
                     int price = Integer.parseInt(priceText);
-                    if (price >= 1000 && price <= 500000) {  // 합리적인 가격 범위
-                        log.info("YES24 가격 발견 (regex fallback): {}원", price);
-                        return new BookPriceDto("yes24", "YES24", price, url, "무료배송", true);
+                    if (price >= 1000 && price <= 500000) {
+                        String goodsUrl = extractYes24GoodsUrl(searchDoc, searchUrl);
+                        log.info("YES24 가격 발견 (info_price): {}원", price);
+                        return new BookPriceDto("yes24", "YES24", price, goodsUrl, "무료배송", true);
+                    }
+                }
+            }
+
+            // ── Step 3: Fallback - 첫 번째 상품 아이템에서 가격 추출 ──
+            for (Element item : searchDoc.select("li[data-goods-no]")) {
+                Element priceBlock = item.selectFirst("div.info_price");
+                if (priceBlock == null) continue;
+
+                // strong.txt_num 내의 em.yes_b가 판매가 (할인가)
+                Element salePrice = priceBlock.selectFirst("strong.txt_num em.yes_b");
+                if (salePrice != null) {
+                    String priceText = salePrice.text().replaceAll("[^0-9]", "");
+                    if (!priceText.isEmpty()) {
+                        int price = Integer.parseInt(priceText);
+                        if (price >= 1000 && price <= 500000) {
+                            String goodsUrl = searchUrl;
+                            Element link = item.selectFirst("a[href*=/product/goods/], a[href*=/Product/Goods/]");
+                            if (link != null) {
+                                String href = link.attr("href");
+                                goodsUrl = href.startsWith("http") ? href : "https://www.yes24.com" + href;
+                            }
+                            log.info("YES24 가격 발견 (item fallback): {}원", price);
+                            return new BookPriceDto("yes24", "YES24", price, goodsUrl, "무료배송", true);
+                        }
                     }
                 }
             }
@@ -154,7 +187,17 @@ public class BookPriceService {
         } catch (Exception e) {
             log.warn("YES24 가격 조회 실패: {}", e.getMessage());
         }
-        return BookPriceDto.unavailable("yes24", "YES24", url);
+        return BookPriceDto.unavailable("yes24", "YES24", searchUrl);
+    }
+
+    /** YES24 검색 결과에서 첫 번째 상품 상세 URL 추출 (소문자/대문자 모두 대응) */
+    private String extractYes24GoodsUrl(Document doc, String fallbackUrl) {
+        Element link = doc.selectFirst("a[href*=/product/goods/], a[href*=/Product/Goods/]");
+        if (link != null) {
+            String href = link.attr("href");
+            return href.startsWith("http") ? href : "https://www.yes24.com" + href;
+        }
+        return fallbackUrl;
     }
 
     private BookPriceDto fetchAladinPrice(String query) {

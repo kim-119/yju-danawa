@@ -15,10 +15,13 @@ import java.util.concurrent.TimeUnit;
 public class WebConfig implements WebMvcConfigurer {
 
     private final String crawlerImageDirectory;
+    private final String uploadDirectory;
 
     public WebConfig(
-            @Value("${app.images.directory:${CRAWLER_OUT:c:/yjudanawa-damo/com/image-crawler}}") String crawlerImageDirectory) {
+            @Value("${app.images.directory:${CRAWLER_OUT:c:/yjudanawa-damo/com/image-crawler}}") String crawlerImageDirectory,
+            @Value("${app.upload.directory:./uploads/images}") String uploadDirectory) {
         this.crawlerImageDirectory = crawlerImageDirectory;
+        this.uploadDirectory = uploadDirectory;
     }
 
     @Override
@@ -26,6 +29,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins("http://localhost:5173")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*");
+        registry.addMapping("/uploads/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET")
                 .allowedHeaders("*");
     }
 
@@ -42,5 +49,14 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/images/**")
                 .addResourceLocations(location)
                 .setCacheControl(CacheControl.maxAge(30, TimeUnit.DAYS).cachePublic());
+
+        // 중고 마켓 업로드 이미지 서빙
+        Path uploadDir = Paths.get(uploadDirectory).toAbsolutePath().normalize();
+        try {
+            java.nio.file.Files.createDirectories(uploadDir);
+        } catch (java.io.IOException ignored) {}
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(uploadDir.toUri().toString())
+                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());
     }
 }

@@ -1,6 +1,7 @@
 @echo off
 setlocal
 
+
 set "SCRIPT_DIR=%~dp0"
 set "COM_START=%SCRIPT_DIR%com\START.bat"
 

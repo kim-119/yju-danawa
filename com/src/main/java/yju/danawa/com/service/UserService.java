@@ -52,4 +52,26 @@ public class UserService {
         return userRepository.findAllPasswordHashes().stream()
                 .anyMatch(hash -> passwordEncoder.matches(rawPassword, hash));
     }
+
+    /** 아이디 찾기: 학번 + 이름 일치 시 username 반환 */
+    public Optional<String> findUsernameByStudentIdAndFullName(String studentId, String fullName) {
+        if (studentId == null || studentId.isBlank() || fullName == null || fullName.isBlank()) {
+            return Optional.empty();
+        }
+        return userRepository.findByStudentIdAndFullName(studentId.trim(), fullName.trim())
+                .map(User::getUsername);
+    }
+
+    /** 비밀번호 재설정: 아이디 + 학번 검증 후 새 비밀번호로 변경 */
+    public boolean resetPassword(String username, String studentId, String newPassword,
+                                 PasswordEncoder passwordEncoder) {
+        if (username == null || studentId == null || newPassword == null) return false;
+        return userRepository.findByUsernameAndStudentId(username.trim(), studentId.trim())
+                .map(user -> {
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    userRepository.save(user);
+                    return true;
+                })
+                .orElse(false);
+    }
 }

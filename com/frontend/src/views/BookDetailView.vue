@@ -78,6 +78,99 @@
         </div>
       </div>
 
+      <!-- 📖 책 소개 (상세 정보) -->
+      <div class="card p-5 mb-4">
+        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span class="w-5 h-5 text-indigo-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </span>
+          책 소개
+        </h2>
+
+        <template v-if="detailInfoLoading">
+          <div class="space-y-2">
+            <div class="skeleton h-4 rounded w-full"></div>
+            <div class="skeleton h-4 rounded w-5/6"></div>
+            <div class="skeleton h-4 rounded w-4/6"></div>
+          </div>
+        </template>
+        <template v-else-if="detailInfo && hasDetailContent">
+          <!-- 기본 정보 태그 -->
+          <div class="flex flex-wrap gap-2 mb-4 text-xs">
+            <span v-if="detailInfo.categoryName" class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full">
+              📂 {{ detailInfo.categoryName }}
+            </span>
+            <span v-if="detailInfo.pubDate" class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+              📅 {{ detailInfo.pubDate }}
+            </span>
+            <span v-if="detailInfo.itemPage" class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+              📄 {{ detailInfo.itemPage }}쪽
+            </span>
+            <span v-if="detailInfo.customerReviewRank" class="bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-full">
+              ⭐ {{ detailInfo.customerReviewRank / 2 }}/5
+            </span>
+            <span v-if="detailInfo.priceStandard" class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+              💰 정가 {{ detailInfo.priceStandard.toLocaleString() }}원
+            </span>
+            <span v-if="detailInfo.priceSales" class="bg-green-50 text-green-700 px-2.5 py-1 rounded-full">
+              🏷️ 판매가 {{ detailInfo.priceSales.toLocaleString() }}원
+            </span>
+          </div>
+
+          <!-- 부제목 -->
+          <p v-if="detailInfo.subTitle" class="text-sm text-gray-500 italic mb-3">
+            {{ detailInfo.subTitle }}
+          </p>
+
+          <!-- 원제 -->
+          <p v-if="detailInfo.originalTitle" class="text-xs text-gray-400 mb-3">
+            원제: {{ detailInfo.originalTitle }}
+          </p>
+
+          <!-- 설명 -->
+          <div v-if="detailInfo.description" class="mb-4">
+            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line"
+               :class="{ 'line-clamp-5': !descExpanded }">
+              {{ detailInfo.description }}
+            </p>
+            <button v-if="detailInfo.description.length > 200"
+                    @click="descExpanded = !descExpanded"
+                    class="text-xs text-blue-500 hover:text-blue-600 mt-1">
+              {{ descExpanded ? '접기' : '더보기' }}
+            </button>
+          </div>
+
+          <!-- 목차 -->
+          <div v-if="detailInfo.toc">
+            <button @click="tocExpanded = !tocExpanded"
+                    class="flex items-center gap-1 text-sm font-semibold text-gray-700 hover:text-gray-900 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform"
+                   :class="{ 'rotate-90': tocExpanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+              목차
+            </button>
+            <div v-if="tocExpanded"
+                 class="text-sm text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50 rounded-lg p-4 max-h-80 overflow-y-auto">
+              {{ detailInfo.toc }}
+            </div>
+          </div>
+
+          <!-- 알라딘 링크 -->
+          <a v-if="detailInfo.link"
+             :href="detailInfo.link"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="inline-block mt-3 text-xs text-blue-500 hover:text-blue-600 hover:underline">
+            알라딘에서 더 보기 →
+          </a>
+        </template>
+        <p v-else class="text-sm text-gray-400">책 소개 정보가 없습니다.</p>
+      </div>
+
       <!-- 정보 카드들 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- 도서관 대출 정보 -->
@@ -218,6 +311,67 @@
         </div>
       </div>
 
+      <div class="card p-5 mt-4">
+        <h2 class="font-bold text-gray-900 mb-4">댓글</h2>
+
+        <div v-if="commentsLoading" class="space-y-2 mb-4">
+          <div v-for="n in 3" :key="n" class="skeleton h-14 rounded-lg"></div>
+        </div>
+        <div v-else-if="comments.length === 0" class="text-sm text-gray-400 mb-4">
+          첫 댓글을 남겨보세요.
+        </div>
+        <div v-else class="space-y-3 mb-4">
+          <div v-for="c in comments" :key="c.id" class="border border-gray-200 rounded-lg p-3">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs text-gray-500">
+                <span class="font-semibold text-gray-700">{{ c.username }}</span>
+                · {{ formatCommentDate(c.createdAt) }}
+              </p>
+              <button
+                v-if="c.ownedByMe"
+                @click="deleteComment(c.id)"
+                class="text-xs text-red-500 hover:text-red-600"
+              >
+                삭제
+              </button>
+            </div>
+            <p class="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{{ c.content }}</p>
+            <div class="mt-2">
+              <button
+                @click="toggleLike(c)"
+                class="text-xs px-2 py-1 rounded border"
+                :class="c.likedByMe ? 'border-pink-300 text-pink-600 bg-pink-50' : 'border-gray-300 text-gray-600'"
+              >
+                좋아요 {{ c.likeCount || 0 }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="auth.isLoggedIn" class="space-y-2">
+          <textarea
+            v-model="commentInput"
+            rows="3"
+            maxlength="1000"
+            class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            placeholder="댓글을 입력하세요 (최대 1000자)"
+          />
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-gray-400">{{ commentInput.length }}/1000</p>
+            <button
+              @click="submitComment"
+              :disabled="commentSubmitting || !commentInput.trim()"
+              class="btn-primary text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ commentSubmitting ? '등록 중...' : '댓글 등록' }}
+            </button>
+          </div>
+        </div>
+        <div v-else class="text-sm text-gray-500">
+          댓글 작성과 좋아요는 로그인 후 이용할 수 있습니다.
+        </div>
+      </div>
+
       <button @click="$router.back()" class="btn-outline mt-6">← 뒤로가기</button>
     </div>
   </div>
@@ -227,8 +381,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
+import { useAuthStore } from '@/stores/auth'
 
 const route    = useRoute()
+const auth     = useAuthStore()
 const isbn13   = route.params.isbn13
 const book     = ref(null)
 const loading  = ref(true)
@@ -236,7 +392,21 @@ const error    = ref(false)
 const prices   = ref([])
 const pricesLoading = ref(false)
 const ebookLoading = ref(false)
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentInput = ref('')
+const commentSubmitting = ref(false)
+const detailInfo = ref(null)
+const detailInfoLoading = ref(false)
+const descExpanded = ref(false)
+const tocExpanded = ref(false)
 const placeholder = 'https://placehold.co/300x440?text=No+Cover'
+
+const hasDetailContent = computed(() => {
+  if (!detailInfo.value) return false
+  const d = detailInfo.value
+  return d.description || d.toc || d.categoryName || d.pubDate || d.itemPage || d.subTitle || d.originalTitle
+})
 
 // 알라딘, YES24, 교보문고만 고정 순서로 표시
 const ALLOWED_STORES = ['aladin', 'yes24', 'kyobo']
@@ -280,6 +450,9 @@ async function fetchDetail() {
     fetchPrices(isbn13, data.title)
     // 전자책 정보를 별도로 비동기 로드 (도서 상세 먼저 표시)
     fetchEbook(isbn13)
+    fetchComments(isbn13)
+    // 책 소개 정보 (알라딘 상세) 비동기 로드
+    fetchDetailInfo(isbn13)
   } catch {
     error.value = true
   } finally {
@@ -301,6 +474,18 @@ async function fetchEbook(isbn) {
   }
 }
 
+async function fetchDetailInfo(isbn) {
+  detailInfoLoading.value = true
+  try {
+    const { data } = await api.getBookDetailInfo(isbn)
+    detailInfo.value = data
+  } catch {
+    detailInfo.value = null
+  } finally {
+    detailInfoLoading.value = false
+  }
+}
+
 async function fetchPrices(isbn, title) {
   pricesLoading.value = true
   try {
@@ -311,6 +496,70 @@ async function fetchPrices(isbn, title) {
   } finally {
     pricesLoading.value = false
   }
+}
+
+async function fetchComments(isbn) {
+  commentsLoading.value = true
+  try {
+    const { data } = await api.getBookComments(isbn)
+    comments.value = data || []
+  } catch {
+    comments.value = []
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+async function submitComment() {
+  if (!auth.isLoggedIn) {
+    alert('로그인 후 댓글을 작성할 수 있습니다.')
+    return
+  }
+  const content = commentInput.value.trim()
+  if (!content) return
+
+  commentSubmitting.value = true
+  try {
+    await api.createBookComment(isbn13, content)
+    commentInput.value = ''
+    await fetchComments(isbn13)
+  } catch {
+    alert('댓글 등록에 실패했습니다.')
+  } finally {
+    commentSubmitting.value = false
+  }
+}
+
+async function toggleLike(comment) {
+  if (!auth.isLoggedIn) {
+    alert('로그인 후 좋아요를 누를 수 있습니다.')
+    return
+  }
+  try {
+    const { data } = await api.toggleBookCommentLike(isbn13, comment.id)
+    comment.likedByMe = data.liked
+    comment.likeCount = data.likeCount
+  } catch {
+    alert('좋아요 처리에 실패했습니다.')
+  }
+}
+
+async function deleteComment(commentId) {
+  if (!auth.isLoggedIn) return
+  if (!confirm('댓글을 삭제할까요?')) return
+  try {
+    await api.deleteBookComment(isbn13, commentId)
+    comments.value = comments.value.filter(c => c.id !== commentId)
+  } catch {
+    alert('댓글 삭제에 실패했습니다.')
+  }
+}
+
+function formatCommentDate(v) {
+  if (!v) return ''
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return v
+  return d.toLocaleString()
 }
 
 onMounted(fetchDetail)

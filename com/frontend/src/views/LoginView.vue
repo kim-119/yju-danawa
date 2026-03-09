@@ -66,10 +66,18 @@
           </button>
         </form>
 
-        <p class="text-center text-sm text-gray-500 mt-6">
-          계정이 없으신가요?
-          <RouterLink to="/register" class="text-yju font-semibold hover:underline">회원가입</RouterLink>
-        </p>
+        <div class="flex items-center justify-between mt-6">
+          <RouterLink
+            to="/account-recovery"
+            class="text-xs text-gray-400 hover:text-gray-600 hover:underline transition-colors"
+          >
+            아이디 · 비밀번호 찾기
+          </RouterLink>
+          <p class="text-sm text-gray-500">
+            계정이 없으신가요?
+            <RouterLink to="/register" class="text-yju font-semibold hover:underline">회원가입</RouterLink>
+          </p>
+        </div>
       </div>
     </div>
   </div>

@@ -38,6 +38,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
+    // Redis (인기 검색어 ZSet)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Security: Password Encoding
     implementation 'org.springframework.security:spring-security-crypto'
     implementation 'org.springframework.boot:spring-boot-starter-security'

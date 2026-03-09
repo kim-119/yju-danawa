@@ -25,6 +25,7 @@ import yju.danawa.com.service.ExternalBookService;
 import yju.danawa.com.service.LibraryGrpcClient;
 import yju.danawa.com.service.LibraryRateLimiter;
 import yju.danawa.com.service.LibraryStatusMapper;
+import yju.danawa.com.service.PopularSearchService;
 import yju.danawa.com.service.YjuLibraryService;
 
 import java.net.URLEncoder;
@@ -52,6 +53,7 @@ public class BookController {
     private final LibraryGrpcClient libraryGrpcClient;
     private final LibraryStatusMapper libraryStatusMapper;
     private final LibraryRateLimiter libraryRateLimiter;
+    private final PopularSearchService popularSearchService;
 
     public BookController(
             BookService bookService,
@@ -62,7 +64,8 @@ public class BookController {
             EbookLibraryService ebookLibraryService,
             LibraryGrpcClient libraryGrpcClient,
             LibraryStatusMapper libraryStatusMapper,
-            LibraryRateLimiter libraryRateLimiter
+            LibraryRateLimiter libraryRateLimiter,
+            PopularSearchService popularSearchService
     ) {
         this.bookService = bookService;
         this.externalBookService = externalBookService;
@@ -73,11 +76,14 @@ public class BookController {
         this.libraryGrpcClient = libraryGrpcClient;
         this.libraryStatusMapper = libraryStatusMapper;
         this.libraryRateLimiter = libraryRateLimiter;
+        this.popularSearchService = popularSearchService;
     }
 
     // Lightweight search endpoint (Danawa-style list page).
     @GetMapping(value = "/search", params = {"q", "!page", "!size"})
     public Map<String, Object> searchBooks(@RequestParam("q") String keyword) {
+        popularSearchService.record(keyword);
+
         // 1. 로컬 DB 검색 (Fallback 여부 포함)
         BookService.SearchResult localResult = bookService.searchWithFallback(keyword);
         List<BookDto> localRows = localResult.books();
@@ -222,6 +228,7 @@ public class BookController {
             @RequestParam("page") int page,
             @RequestParam("size") int size
     ) {
+        popularSearchService.record(keyword);
         int safeSize = Math.min(Math.max(size, 1), 100);
         Page<BookSearchItemDto> result = bookImageSearchService.search(keyword, PageRequest.of(page, safeSize));
         return new BookSearchPageResponse(result.getContent(), result.getTotalElements(), page, safeSize);
@@ -304,6 +311,36 @@ public class BookController {
             @RequestParam(value = "title", required = false) String title
     ) {
         return bookPriceService.getPrices(isbn, title);
+    }
+
+    @GetMapping("/{isbn13}/detail-info")
+    public BookDetailInfoResponse getBookDetailInfo(@PathVariable("isbn13") String isbn13) {
+        String normalized = normalizeIsbn13(isbn13);
+        if (normalized == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "isbn13 must be exactly 13 digits");
+        }
+        var item = externalBookService.lookupAladin(normalized);
+        if (item == null) {
+            return new BookDetailInfoResponse(
+                    normalized, null, null, null, null, null,
+                    null, null, null, null, null, null, null
+            );
+        }
+        return new BookDetailInfoResponse(
+                normalized,
+                safe(item.description()),
+                safe(item.categoryName()),
+                safe(item.pubDate()),
+                safe(item.link()),
+                item.priceStandard(),
+                item.priceSales(),
+                item.customerReviewRank(),
+                item.subInfo() != null ? item.subInfo().itemPage() : null,
+                item.subInfo() != null ? safe(item.subInfo().toc()) : null,
+                item.subInfo() != null ? safe(item.subInfo().subTitle()) : null,
+                item.subInfo() != null ? safe(item.subInfo().originalTitle()) : null,
+                item.subInfo() != null && item.subInfo().packing() != null ? item.subInfo().packing().toString() : null
+        );
     }
 
     @GetMapping({"/info", "/info/", "/book-info", "/book-info/"})
@@ -404,6 +441,23 @@ public class BookController {
             boolean loanable,
             String statusCode,
             String statusText
+    ) {
+    }
+
+    public record BookDetailInfoResponse(
+            String isbn13,
+            String description,
+            String categoryName,
+            String pubDate,
+            String link,
+            Integer priceStandard,
+            Integer priceSales,
+            Integer customerReviewRank,
+            Integer itemPage,
+            String toc,
+            String subTitle,
+            String originalTitle,
+            String packing
     ) {
     }
 

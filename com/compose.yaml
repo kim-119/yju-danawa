@@ -74,6 +74,15 @@ services:
       retries: 5
       start_period: 60s
 
+  redis:
+    image: redis:7-alpine
+    container_name: ydanawa-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - ydanawa-network
+
   backend:
     build:
       context: .
@@ -85,6 +94,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ydanawa_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: "0910"
+
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
 
       KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
@@ -99,6 +111,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
       library-scraper:
         condition: service_started
     ports:

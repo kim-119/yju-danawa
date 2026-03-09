@@ -49,8 +49,28 @@ export default {
     return api.get('/books/prices', { params: { isbn, title } })
   },
 
+  getBookDetailInfo(isbn13) {
+    return api.get(`/books/${isbn13}/detail-info`)
+  },
+
   getBooksInfinite(cursor, limit = 30) {
     return api.get('/books/infinite', { params: { cursor, limit } })
+  },
+
+  getBookComments(isbn13) {
+    return api.get(`/books/${isbn13}/comments`)
+  },
+
+  createBookComment(isbn13, content) {
+    return api.post(`/books/${isbn13}/comments`, { content })
+  },
+
+  deleteBookComment(isbn13, commentId) {
+    return api.delete(`/books/${isbn13}/comments/${commentId}`)
+  },
+
+  toggleBookCommentLike(isbn13, commentId) {
+    return api.post(`/books/${isbn13}/comments/${commentId}/like`)
   },
 
   // ── 공지사항 배너 ─────────────────────────────────────
@@ -71,6 +91,14 @@ export default {
     return api.get('/auth/validate', { params: { username, studentId, password } })
   },
 
+  findUsername(studentId, fullName) {
+    return api.post('/auth/find-username', { studentId, fullName })
+  },
+
+  resetPassword(username, studentId, newPassword) {
+    return api.post('/auth/reset-password', { username, studentId, newPassword })
+  },
+
   // ── 프로필 ────────────────────────────────────────────
   getMyProfile() {
     return api.get('/users/me')
@@ -88,5 +116,34 @@ export default {
 
   deleteReadingLog(id) {
     return api.delete(`/reading-logs/${id}`)
+  },
+
+  // ── 인기 검색어 ────────────────────────────────────────
+  getPopularKeywords() {
+    return api.get('/search/popular')
+  },
+
+  // ── 학과 ──────────────────────────────────────────────
+  getDepartments() {
+    return api.get('/departments')
+  },
+
+  // ── 중고 서적 ──────────────────────────────────────────
+  getUsedBooks(departmentId, page = 0, size = 20) {
+    return api.get('/used-books', { params: { department_id: departmentId, page, size } })
+  },
+
+  getUsedBookDetail(id) {
+    return api.get(`/used-books/${id}`)
+  },
+
+  createUsedBook(formData) {
+    return api.post('/used-books', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+
+  searchUsedBooks(q, page = 0, size = 20) {
+    return api.get('/used-books/search', { params: { q, page, size } })
   }
 }
