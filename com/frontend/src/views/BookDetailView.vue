@@ -73,6 +73,15 @@
 
           <!-- 구매 링크 -->
           <div v-if="book.vendors" class="mt-5 flex flex-wrap gap-2">
+            <button
+              @click="openPreview"
+              :disabled="!detailInfo?.itemId"
+              class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700
+                     disabled:bg-gray-300 disabled:cursor-not-allowed
+                     text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              📖 책 미리보기
+            </button>
             <a :href="book.vendors.aladin" target="_blank" rel="noopener noreferrer"
                class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600
                       text-white text-sm font-semibold rounded-lg transition-colors">
@@ -504,6 +513,16 @@ function heatmapPercentage(level) {
   const total = counts.reduce((a, b) => a + b, 0)
   if (total === 0) return 0
   return ((heatmap.value[level] || 0) / total) * 100
+}
+
+function openPreview() {
+  const itemId = detailInfo.value?.itemId
+  if (!itemId) {
+    alert('미리보기가 제공되지 않는 도서입니다.')
+    return
+  }
+  const url = `https://www.aladin.co.kr/shop/book/wletslookViewer.aspx?ItemId=${itemId}`
+  window.open(url, 'aladinPreview', 'width=1100,height=800,scrollbars=yes,resizable=yes')
 }
 
 async function addToCart() {

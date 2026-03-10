@@ -8,6 +8,7 @@ public record AladinLookupResponse(List<AladinLookupItem> item) {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record AladinLookupItem(
+            String itemId,
             String title,
             String author,
             String publisher,

@@ -343,11 +343,12 @@ public class BookController {
         if (item == null) {
             return new BookDetailInfoResponse(
                     normalized, null, null, null, null, null,
-                    null, null, null, null, null, null, null
+                    null, null, null, null, null, null, null, null
             );
         }
         return new BookDetailInfoResponse(
                 normalized,
+                safe(item.itemId()),
                 safe(item.description()),
                 safe(item.categoryName()),
                 safe(item.pubDate()),
