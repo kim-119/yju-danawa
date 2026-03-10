@@ -99,6 +99,8 @@ CREATE TABLE IF NOT EXISTS used_books (
     seller_username VARCHAR(255),
     seller_id       BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
     isbn            VARCHAR(32),
+    isbn13          VARCHAR(13),
+    book_condition  VARCHAR(10),
     image_url       VARCHAR(2048),
     status          VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE',
     department_id   BIGINT REFERENCES departments(id) ON DELETE SET NULL,
@@ -108,10 +110,13 @@ CREATE TABLE IF NOT EXISTS used_books (
 -- 기존 used_books 테이블에 신규 컬럼이 없으면 추가 (마이그레이션 호환)
 ALTER TABLE used_books ADD COLUMN IF NOT EXISTS seller_id   BIGINT REFERENCES users(user_id) ON DELETE SET NULL;
 ALTER TABLE used_books ADD COLUMN IF NOT EXISTS status      VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE';
+ALTER TABLE used_books ADD COLUMN IF NOT EXISTS isbn13      VARCHAR(13);
+ALTER TABLE used_books ADD COLUMN IF NOT EXISTS book_condition VARCHAR(10);
 
 CREATE INDEX IF NOT EXISTS idx_usedbook_dept    ON used_books(department_id);
 CREATE INDEX IF NOT EXISTS idx_usedbook_created ON used_books(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_usedbook_seller  ON used_books(seller_id);
+CREATE INDEX IF NOT EXISTS idx_usedbook_isbn13  ON used_books(isbn13);
 
 -- =============================================
 -- 중고 마켓 이미지 테이블 (파일은 로컬 /uploads/images에 저장)

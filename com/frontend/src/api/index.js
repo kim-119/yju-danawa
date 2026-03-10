@@ -78,6 +78,32 @@ export default {
     return api.get(`/books/${bookId}/difficulty-heatmap`)
   },
 
+  getCompletionStats(isbn13) {
+    return api.get(`/books/${isbn13}/completion-stats`)
+  },
+
+  // ── 도서 댓글(통합 리뷰) ───────────────────────────────
+  getBookComments(isbn13) {
+    return api.get(`/books/${isbn13}/comments`)
+  },
+
+  createBookComment(isbn13, content, completionRate) {
+    return api.post(`/books/${isbn13}/comments`, { content, completionRate })
+  },
+
+  deleteBookComment(isbn13, commentId) {
+    return api.delete(`/books/${isbn13}/comments/${commentId}`)
+  },
+
+  toggleBookCommentLike(isbn13, commentId) {
+    return api.post(`/books/${isbn13}/comments/${commentId}/like`)
+  },
+
+  // ── 중고 매물 랭킹 ────────────────────────────────────
+  getUsedOffers(isbn13) {
+    return api.get(`/books/${isbn13}/used-offers`)
+  },
+
   // ── 공지사항 배너 ─────────────────────────────────────
   getNoticeBanners() {
     return api.get('/notices/banners')
@@ -124,6 +150,10 @@ export default {
 
   removeFromCart(bookId) {
     return api.delete(`/cart/${encodeURIComponent(bookId)}`)
+  },
+
+  updateCartItemQuantity(bookId, quantity) {
+    return api.put(`/cart/${encodeURIComponent(bookId)}`, { quantity })
   },
 
   // ── 독서 일지 ──────────────────────────────────────────

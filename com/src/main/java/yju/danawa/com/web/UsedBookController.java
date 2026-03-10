@@ -75,13 +75,15 @@ public class UsedBookController {
             @RequestParam(required = false) Integer priceWon,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String isbn,
+            @RequestParam(required = false) String isbn13,
+            @RequestParam(required = false) String bookCondition,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false, defaultValue = "AVAILABLE") String status,
             @RequestParam(value = "images", required = false) List<MultipartFile> images
     ) {
         requireAuth(principal);
         UsedBookCreateRequest req = new UsedBookCreateRequest(
-                title, author, priceWon, description, isbn, departmentId, status);
+                title, author, priceWon, description, isbn, isbn13, bookCondition, departmentId, status);
         return usedBookService.create(principal.getName(), req, images);
     }
 
@@ -96,13 +98,15 @@ public class UsedBookController {
             @RequestParam(required = false) Integer priceWon,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String isbn,
+            @RequestParam(required = false) String isbn13,
+            @RequestParam(required = false) String bookCondition,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String status,
             @RequestParam(value = "images", required = false) List<MultipartFile> images
     ) {
         requireAuth(principal);
         UsedBookCreateRequest req = new UsedBookCreateRequest(
-                title, author, priceWon, description, isbn, departmentId, status);
+                title, author, priceWon, description, isbn, isbn13, bookCondition, departmentId, status);
         return usedBookService.update(id, principal.getName(), req, images);
     }
 
@@ -146,6 +150,9 @@ public class UsedBookController {
                 book.getDescription(),
                 book.getSellerUsername(),
                 book.getIsbn(),
+                book.getIsbn13(),
+                book.getBookCondition(),
+                book.getStatus(),
                 book.getImageUrl(),
                 book.getDepartment() != null ? book.getDepartment().getId() : null,
                 book.getDepartment() != null ? book.getDepartment().getName() : null,

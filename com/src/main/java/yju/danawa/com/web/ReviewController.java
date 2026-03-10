@@ -66,5 +66,10 @@ public class ReviewController {
         return reviewService.getDifficultyHeatmap(bookId);
     }
 
+    @GetMapping("/{bookId}/completion-stats")
+    public Map<Integer, Long> getCompletionStats(@PathVariable String bookId) {
+        return reviewService.getCompletionStats(bookId);
+    }
+
     public record ReviewCreateRequest(String content, Integer rating) {}
 }

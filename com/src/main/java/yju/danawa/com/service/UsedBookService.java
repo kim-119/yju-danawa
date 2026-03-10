@@ -77,6 +77,8 @@ public class UsedBookService {
         book.setPriceWon(req.priceWon());
         book.setDescription(req.description());
         book.setIsbn(req.isbn());
+        book.setIsbn13(req.isbn13());
+        book.setBookCondition(req.bookCondition());
         book.setStatus(req.status() != null ? req.status() : "AVAILABLE");
         book.setSeller(seller);
         book.setSellerUsername(seller.getUsername());
@@ -111,6 +113,8 @@ public class UsedBookService {
         book.setPriceWon(req.priceWon());
         book.setDescription(req.description());
         book.setIsbn(req.isbn());
+        if (req.isbn13() != null) book.setIsbn13(req.isbn13());
+        if (req.bookCondition() != null) book.setBookCondition(req.bookCondition());
         book.setStatus(req.status() != null ? req.status() : book.getStatus());
         book.setDepartment(req.departmentId() != null ? resolveDepartment(req.departmentId()) : book.getDepartment());
 
@@ -146,6 +150,12 @@ public class UsedBookService {
                 "page", page,
                 "size", safeSize
         );
+    }
+
+    /** 특정 ISBN-13 기반 실시간 최저가 매물 랭킹 조회 */
+    public List<UsedBookDto> getUsedOffers(String isbn13) {
+        List<UsedBook> offers = usedBookRepository.findTop5ByIsbn13AndStatusOrderByPriceWonAsc(isbn13, "AVAILABLE");
+        return offers.stream().map(this::toSimpleDto).toList();
     }
 
     // --- helpers ---
@@ -231,6 +241,8 @@ public class UsedBookService {
                 book.getDescription(),
                 book.getSellerUsername(),
                 book.getIsbn(),
+                book.getIsbn13(),
+                book.getBookCondition(),
                 book.getStatus(),
                 book.getDepartment() != null ? book.getDepartment().getId() : null,
                 book.getDepartment() != null ? book.getDepartment().getName() : null,
@@ -248,6 +260,9 @@ public class UsedBookService {
                 book.getDescription(),
                 book.getSellerUsername(),
                 book.getIsbn(),
+                book.getIsbn13(),
+                book.getBookCondition(),
+                book.getStatus(),
                 book.getImageUrl(),
                 book.getDepartment() != null ? book.getDepartment().getId() : null,
                 book.getDepartment() != null ? book.getDepartment().getName() : null,

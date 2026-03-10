@@ -7,7 +7,8 @@ import java.time.Instant;
 @Table(name = "used_books", indexes = {
         @Index(name = "idx_usedbook_dept", columnList = "department_id"),
         @Index(name = "idx_usedbook_created", columnList = "created_at"),
-        @Index(name = "idx_usedbook_seller", columnList = "seller_id")
+        @Index(name = "idx_usedbook_seller", columnList = "seller_id"),
+        @Index(name = "idx_usedbook_isbn13", columnList = "isbn13")
 })
 public class UsedBook {
 
@@ -36,6 +37,14 @@ public class UsedBook {
     private User seller;
 
     private String isbn;
+
+    /** 도서 검색 API를 통해 확인된 ISBN-13 (13자리 숫자) */
+    @Column(name = "isbn13", length = 13)
+    private String isbn13;
+
+    /** 책의 물리적 상태: 상, 중, 하 */
+    @Column(name = "book_condition", length = 10)
+    private String bookCondition;
 
     /** 목록 뷰용 대표 이미지 URL (첫 번째 업로드 이미지) */
     @Column(name = "image_url")
@@ -70,6 +79,10 @@ public class UsedBook {
     public void setSeller(User seller) { this.seller = seller; }
     public String getIsbn() { return isbn; }
     public void setIsbn(String isbn) { this.isbn = isbn; }
+    public String getIsbn13() { return isbn13; }
+    public void setIsbn13(String isbn13) { this.isbn13 = isbn13; }
+    public String getBookCondition() { return bookCondition; }
+    public void setBookCondition(String bookCondition) { this.bookCondition = bookCondition; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getStatus() { return status; }

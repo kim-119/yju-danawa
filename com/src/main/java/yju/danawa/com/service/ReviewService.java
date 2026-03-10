@@ -5,10 +5,12 @@ import org.springframework.transaction.annotation.Transactional;
 import yju.danawa.com.domain.Review;
 import yju.danawa.com.domain.ReviewLike;
 import yju.danawa.com.dto.ReviewDto;
+import yju.danawa.com.repository.BookCommentRepository;
 import yju.danawa.com.repository.ReviewLikeRepository;
 import yju.danawa.com.repository.ReviewRepository;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,10 +21,13 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ReviewLikeRepository reviewLikeRepository;
+    private final BookCommentRepository bookCommentRepository;
 
-    public ReviewService(ReviewRepository reviewRepository, ReviewLikeRepository reviewLikeRepository) {
+    public ReviewService(ReviewRepository reviewRepository, ReviewLikeRepository reviewLikeRepository,
+                         BookCommentRepository bookCommentRepository) {
         this.reviewRepository = reviewRepository;
         this.reviewLikeRepository = reviewLikeRepository;
+        this.bookCommentRepository = bookCommentRepository;
     }
 
     public List<ReviewDto> getReviews(String bookId, Long currentUserId) {
@@ -68,6 +73,22 @@ public class ReviewService {
         result.put("liked", liked);
         result.put("likeCount", count);
         return result;
+    }
+
+    /** 완독률 구간별 통계 (BookComment 기반 — 25/50/75/100) */
+    public Map<Integer, Long> getCompletionStats(String bookId) {
+        Map<Integer, Long> stats = new LinkedHashMap<>();
+        stats.put(25, 0L);
+        stats.put(50, 0L);
+        stats.put(75, 0L);
+        stats.put(100, 0L);
+        List<Object[]> rows = bookCommentRepository.findCompletionRateStatsByIsbn13(bookId);
+        for (Object[] row : rows) {
+            Integer rate = (Integer) row[0];
+            Long count = ((Number) row[1]).longValue();
+            if (stats.containsKey(rate)) stats.put(rate, count);
+        }
+        return stats;
     }
 
     public Map<Integer, Long> getDifficultyHeatmap(String bookId) {

@@ -15,6 +15,7 @@ import yju.danawa.com.service.PopularSearchService;
 import yju.danawa.com.service.YjuLibraryService;
 import yju.danawa.com.util.SecurityUtil;
 import yju.danawa.com.service.BookRecentlyViewedService;
+import yju.danawa.com.repository.UsedBookRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -43,6 +44,7 @@ class BookControllerJavaSearchTest {
         PopularSearchService popularSearchService = mock(PopularSearchService.class);
         SecurityUtil securityUtil = mock(SecurityUtil.class);
         BookRecentlyViewedService bookRecentlyViewedService = mock(BookRecentlyViewedService.class);
+        UsedBookRepository usedBookRepository = mock(UsedBookRepository.class);
 
         when(bookService.searchWithFallback("자바")).thenReturn(new BookService.SearchResult(List.of(
                 new BookDto("9788960777330", "자바의 정석", "남궁성", "도우출판", "/images/a.png", LocalDate.of(2019, 11, 29), 30000.0),
@@ -62,7 +64,8 @@ class BookControllerJavaSearchTest {
                 libraryRateLimiter,
                 popularSearchService,
                 securityUtil,
-                bookRecentlyViewedService
+                bookRecentlyViewedService,
+                usedBookRepository
         );
 
         @SuppressWarnings("unchecked")
@@ -88,6 +91,7 @@ class BookControllerJavaSearchTest {
         PopularSearchService popularSearchService = mock(PopularSearchService.class);
         SecurityUtil securityUtil = mock(SecurityUtil.class);
         BookRecentlyViewedService bookRecentlyViewedService = mock(BookRecentlyViewedService.class);
+        UsedBookRepository usedBookRepository = mock(UsedBookRepository.class);
         HttpServletRequest request = mock(HttpServletRequest.class);
 
         String isbn13 = "9788960777330";
@@ -122,7 +126,8 @@ class BookControllerJavaSearchTest {
                 libraryRateLimiter,
                 popularSearchService,
                 securityUtil,
-                bookRecentlyViewedService
+                bookRecentlyViewedService,
+                usedBookRepository
         );
 
         BookController.BookDetailResponse response = controller.getBookDetail(isbn13, request);

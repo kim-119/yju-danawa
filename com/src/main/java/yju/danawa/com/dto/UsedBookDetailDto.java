@@ -10,6 +10,8 @@ public record UsedBookDetailDto(
         String description,
         String sellerUsername,
         String isbn,
+        String isbn13,
+        String bookCondition,
         String status,
         Long departmentId,
         String departmentName,

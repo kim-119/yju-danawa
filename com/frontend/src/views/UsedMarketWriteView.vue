@@ -13,53 +13,86 @@
 
     <form @submit.prevent="handleSubmit" class="space-y-5">
 
+      <!-- ① 도서 검색 (ISBN-13 자동 연동) -->
+      <div class="card p-4">
+        <p class="text-sm font-semibold text-gray-700 mb-2">
+          도서 검색
+          <span class="text-gray-400 font-normal ml-1">(제목/ISBN으로 검색하면 정보가 자동 입력됩니다)</span>
+        </p>
+        <div class="flex gap-2">
+          <input
+            v-model="bookQuery"
+            type="text"
+            class="input-field flex-1"
+            placeholder="책 제목 또는 ISBN-13 입력"
+            @keydown.enter.prevent="searchBook"
+          />
+          <button type="button" @click="searchBook" :disabled="bookSearching"
+                  class="px-4 py-2 bg-yju text-white rounded-lg text-sm font-semibold hover:bg-yju/90 disabled:opacity-50 transition-colors flex-shrink-0">
+            {{ bookSearching ? '검색 중' : '검색' }}
+          </button>
+        </div>
+
+        <!-- 선택된 도서 표시 -->
+        <div v-if="selectedBook" class="mt-3 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
+          <img :src="selectedBook.thumbUrl || 'https://placehold.co/40x56?text=No'" class="w-8 h-11 object-cover rounded flex-shrink-0" />
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 truncate">{{ selectedBook.title }}</p>
+            <p class="text-xs text-gray-500">{{ selectedBook.author }} · ISBN: {{ selectedBook.isbn13 }}</p>
+          </div>
+          <button type="button" @click="clearSelectedBook" class="text-gray-400 hover:text-red-500 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 검색 결과 드롭다운 -->
+        <div v-if="bookResults.length > 0 && !selectedBook" class="mt-2 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <button
+            v-for="item in bookResults"
+            :key="item.isbn13"
+            type="button"
+            @click="selectBook(item)"
+            class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-indigo-50 transition-colors text-left border-b border-gray-100 last:border-0"
+          >
+            <img :src="item.thumbUrl || 'https://placehold.co/32x44?text=No'" class="w-8 h-11 object-cover rounded flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ item.title }}</p>
+              <p class="text-xs text-gray-500 truncate">{{ item.author }}</p>
+              <p class="text-[10px] text-gray-400 font-mono">ISBN: {{ item.isbn13 }}</p>
+            </div>
+          </button>
+        </div>
+        <p v-if="bookSearchDone && bookResults.length === 0 && !selectedBook" class="mt-2 text-xs text-gray-400">검색 결과가 없습니다.</p>
+      </div>
+
       <!-- 이미지 업로드 -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">
           이미지
           <span class="text-gray-400 font-normal ml-1">(최대 5장, 선택)</span>
         </label>
-
-        <!-- 업로드 영역 -->
         <div
-          class="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center
-                 hover:border-yju hover:bg-blue-50/30 transition-all cursor-pointer"
+          class="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:border-yju hover:bg-blue-50/30 transition-all cursor-pointer"
           :class="isDragOver ? 'border-yju bg-blue-50/40' : ''"
           @click="fileInput.click()"
           @dragover.prevent="isDragOver = true"
           @dragleave="isDragOver = false"
           @drop.prevent="onDrop"
         >
-          <input
-            ref="fileInput"
-            type="file"
-            accept="image/*"
-            multiple
-            class="hidden"
-            @change="onFileChange"
-          />
+          <input ref="fileInput" type="file" accept="image/*" multiple class="hidden" @change="onFileChange" />
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
           <p class="text-sm text-gray-400">클릭하거나 이미지를 드래그해서 올리세요</p>
           <p class="text-xs text-gray-300 mt-1">모든 이미지 형식 지원</p>
         </div>
-
-        <!-- 미리보기 -->
         <div v-if="previews.length > 0" class="flex gap-2 mt-3 flex-wrap">
-          <div
-            v-for="(preview, i) in previews"
-            :key="i"
-            class="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group"
-          >
+          <div v-for="(preview, i) in previews" :key="i" class="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group">
             <img :src="preview" class="w-full h-full object-cover" />
-            <button
-              type="button"
-              @click.stop="removeImage(i)"
-              class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100
-                     flex items-center justify-center transition-opacity"
-            >
+            <button type="button" @click.stop="removeImage(i)"
+                    class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -74,44 +107,46 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">
           책 제목 <span class="text-red-500">*</span>
         </label>
-        <input
-          v-model="form.title"
-          type="text"
-          class="input-field"
-          placeholder="책 제목을 입력하세요"
-          required
-        />
+        <input v-model="form.title" type="text" class="input-field" placeholder="책 제목을 입력하세요" required />
       </div>
 
       <!-- 저자 -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">저자</label>
-        <input
-          v-model="form.author"
-          type="text"
-          class="input-field"
-          placeholder="저자명"
-        />
+        <input v-model="form.author" type="text" class="input-field" placeholder="저자명" />
       </div>
 
-      <!-- 가격 + 상태 (2열) -->
+      <!-- 가격 + 책 상태 (2열) -->
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">
             판매 가격 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
-            <input
-              v-model.number="form.priceWon"
-              type="number"
-              min="0"
-              class="input-field pr-8"
-              placeholder="0"
-              required
-            />
+            <input v-model.number="form.priceWon" type="number" min="0" class="input-field pr-8" placeholder="0" required />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">원</span>
           </div>
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">책 상태 <span class="text-red-500">*</span></label>
+          <div class="flex gap-1.5">
+            <button
+              v-for="cond in ['상', '중', '하']" :key="cond"
+              type="button"
+              @click="form.bookCondition = cond"
+              :class="[
+                'flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors',
+                form.bookCondition === cond
+                  ? 'bg-yju text-white border-yju'
+                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-yju hover:text-yju'
+              ]"
+            >{{ cond }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 판매 상태 + 학과 카테고리 (2열) -->
+      <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">판매 상태</label>
           <select v-model="form.status" class="input-field bg-white">
@@ -120,36 +155,26 @@
             <option value="SOLD">판매완료</option>
           </select>
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">학과 카테고리</label>
+          <select v-model="form.departmentId" class="input-field bg-white">
+            <option :value="null">학과 선택 (선택)</option>
+            <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+          </select>
+        </div>
       </div>
 
-      <!-- 학과 카테고리 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">학과 카테고리</label>
-        <select v-model="form.departmentId" class="input-field bg-white">
-          <option :value="null">학과 선택 (선택사항)</option>
-          <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-            {{ dept.name }}
-          </option>
-        </select>
-      </div>
-
-      <!-- ISBN -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
-        <input
-          v-model="form.isbn"
-          type="text"
-          class="input-field"
-          placeholder="9791234567890 (선택사항)"
-          maxlength="20"
-        />
+      <!-- ISBN-13 (도서 검색으로 자동 입력됨) -->
+      <div v-if="form.isbn13">
+        <label class="block text-sm font-medium text-gray-700 mb-1">ISBN-13 <span class="text-indigo-500 text-xs font-normal ml-1">(도서 검색으로 자동 입력)</span></label>
+        <input :value="form.isbn13" type="text" class="input-field bg-gray-50 text-gray-500 cursor-not-allowed" readonly />
       </div>
 
       <!-- 설명 -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
           상세 설명
-          <span class="text-gray-400 font-normal ml-1">(책 상태, 낙서 유무 등)</span>
+          <span class="text-gray-400 font-normal ml-1">(낙서, 형광펜 등 상태 설명)</span>
         </label>
         <textarea
           v-model="form.description"
@@ -171,20 +196,12 @@
 
       <!-- 버튼 -->
       <div class="flex gap-3 pt-2">
-        <button
-          type="button"
-          @click="$router.back()"
-          class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600
-                 hover:bg-gray-50 transition-colors"
-        >
+        <button type="button" @click="$router.back()"
+                class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
           취소
         </button>
-        <button
-          type="submit"
-          :disabled="submitting || !form.title || form.priceWon === null"
-          class="flex-1 btn-primary py-3 flex items-center justify-center gap-2
-                 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
+        <button type="submit" :disabled="submitting || !form.title || form.priceWon === null || !form.bookCondition"
+                class="flex-1 btn-primary py-3 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
           <svg v-if="submitting" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
@@ -205,22 +222,30 @@ import api from '@/api'
 const router = useRouter()
 
 const form = ref({
-  title: '',
-  author: '',
-  priceWon: null,
-  status: 'AVAILABLE',
+  title:        '',
+  author:       '',
+  priceWon:     null,
+  status:       'AVAILABLE',
   departmentId: null,
-  isbn: '',
-  description: '',
+  isbn13:       '',
+  bookCondition: '',
+  description:  '',
 })
 
-const departments = ref([])
-const files       = ref([])
-const previews    = ref([])
-const isDragOver  = ref(false)
-const submitting  = ref(false)
-const errorMsg    = ref('')
-const fileInput   = ref(null)
+const departments   = ref([])
+const files         = ref([])
+const previews      = ref([])
+const isDragOver    = ref(false)
+const submitting    = ref(false)
+const errorMsg      = ref('')
+const fileInput     = ref(null)
+
+// 도서 검색
+const bookQuery      = ref('')
+const bookSearching  = ref(false)
+const bookSearchDone = ref(false)
+const bookResults    = ref([])
+const selectedBook   = ref(null)
 
 onMounted(async () => {
   try {
@@ -230,6 +255,39 @@ onMounted(async () => {
     departments.value = []
   }
 })
+
+async function searchBook() {
+  const q = bookQuery.value.trim()
+  if (!q) return
+  bookSearching.value = true
+  bookSearchDone.value = false
+  bookResults.value = []
+  try {
+    const { data } = await api.searchBooks(q)
+    bookResults.value = (data.items || []).slice(0, 5)
+    bookSearchDone.value = true
+  } catch {
+    bookResults.value = []
+    bookSearchDone.value = true
+  } finally {
+    bookSearching.value = false
+  }
+}
+
+function selectBook(item) {
+  selectedBook.value = item
+  bookResults.value  = []
+  form.value.title   = item.title   || form.value.title
+  form.value.author  = item.author  || form.value.author
+  form.value.isbn13  = item.isbn13  || ''
+}
+
+function clearSelectedBook() {
+  selectedBook.value  = null
+  form.value.isbn13   = ''
+  bookQuery.value     = ''
+  bookSearchDone.value = false
+}
 
 function onFileChange(e) {
   addFiles(Array.from(e.target.files))
@@ -244,8 +302,7 @@ function onDrop(e) {
 function addFiles(newFiles) {
   const remaining = 5 - files.value.length
   if (remaining <= 0) return
-  const toAdd = newFiles.slice(0, remaining)
-  toAdd.forEach(f => {
+  newFiles.slice(0, remaining).forEach(f => {
     files.value.push(f)
     const reader = new FileReader()
     reader.onload = e => previews.value.push(e.target.result)
@@ -259,8 +316,9 @@ function removeImage(index) {
 }
 
 async function handleSubmit() {
-  if (!form.value.title.trim()) { errorMsg.value = '책 제목을 입력해 주세요.'; return }
+  if (!form.value.title.trim())                          { errorMsg.value = '책 제목을 입력해 주세요.'; return }
   if (form.value.priceWon === null || form.value.priceWon < 0) { errorMsg.value = '가격을 입력해 주세요.'; return }
+  if (!form.value.bookCondition)                         { errorMsg.value = '책 상태(상/중/하)를 선택해 주세요.'; return }
 
   submitting.value = true
   errorMsg.value   = ''
@@ -270,8 +328,9 @@ async function handleSubmit() {
   if (form.value.author)       fd.append('author', form.value.author.trim())
   fd.append('priceWon', form.value.priceWon)
   fd.append('status', form.value.status)
+  fd.append('bookCondition', form.value.bookCondition)
   if (form.value.departmentId) fd.append('departmentId', form.value.departmentId)
-  if (form.value.isbn)         fd.append('isbn', form.value.isbn.trim())
+  if (form.value.isbn13)       fd.append('isbn13', form.value.isbn13.trim())
   if (form.value.description)  fd.append('description', form.value.description.trim())
   files.value.forEach(f => fd.append('images', f))
 
@@ -280,13 +339,9 @@ async function handleSubmit() {
     router.push({ name: 'market-detail', params: { id: data.id } })
   } catch (e) {
     const status = e.response?.status
-    if (status === 401) {
-      errorMsg.value = '로그인이 필요합니다.'
-    } else if (status === 400) {
-      errorMsg.value = e.response?.data?.message || '입력값을 확인해 주세요.'
-    } else {
-      errorMsg.value = '등록 중 오류가 발생했습니다. 다시 시도해 주세요.'
-    }
+    if (status === 401)      errorMsg.value = '로그인이 필요합니다.'
+    else if (status === 400) errorMsg.value = e.response?.data?.message || '입력값을 확인해 주세요.'
+    else                     errorMsg.value = '등록 중 오류가 발생했습니다. 다시 시도해 주세요.'
   } finally {
     submitting.value = false
   }

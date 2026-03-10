@@ -13,10 +13,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import yju.danawa.com.dto.UsedBookDto;
+import yju.danawa.com.domain.UsedBook;
 import yju.danawa.com.dto.BookDto;
 import yju.danawa.com.dto.BookPriceDto;
 import yju.danawa.com.dto.BookSearchItemDto;
 import yju.danawa.com.dto.InfiniteScrollResponse;
+import yju.danawa.com.dto.UsedOfferDto;
+import yju.danawa.com.repository.UsedBookRepository;
 import yju.danawa.com.service.BookImageSearchService;
 import yju.danawa.com.service.BookPriceService;
 import yju.danawa.com.service.BookService;
@@ -58,6 +62,7 @@ public class BookController {
     private final PopularSearchService popularSearchService;
     private final SecurityUtil securityUtil;
     private final BookRecentlyViewedService bookRecentlyViewedService;
+    private final UsedBookRepository usedBookRepository;
 
     public BookController(
             BookService bookService,
@@ -71,7 +76,8 @@ public class BookController {
             LibraryRateLimiter libraryRateLimiter,
             PopularSearchService popularSearchService,
             SecurityUtil securityUtil,
-            BookRecentlyViewedService bookRecentlyViewedService
+            BookRecentlyViewedService bookRecentlyViewedService,
+            UsedBookRepository usedBookRepository
     ) {
         this.bookService = bookService;
         this.externalBookService = externalBookService;
@@ -85,6 +91,7 @@ public class BookController {
         this.popularSearchService = popularSearchService;
         this.securityUtil = securityUtil;
         this.bookRecentlyViewedService = bookRecentlyViewedService;
+        this.usedBookRepository = usedBookRepository;
     }
 
     // Lightweight search endpoint (Danawa-style list page).
@@ -368,6 +375,19 @@ public class BookController {
                 result.errorMessage(),
                 result.checkedAt()
         );
+    }
+
+    /** 특정 도서의 학우 중고 매물 랭킹 (판매중, 가격 오름차순, 최대 5건) */
+    @GetMapping("/{isbn13}/used-offers")
+    public List<UsedOfferDto> getUsedOffers(@PathVariable("isbn13") String isbn13) {
+        String normalized = normalizeIsbn13(isbn13);
+        if (normalized == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "isbn13 must be exactly 13 digits");
+        }
+        return usedBookRepository.findTop5ByIsbn13AndStatusOrderByPriceWonAsc(normalized, "AVAILABLE")
+                .stream()
+                .map(b -> new UsedOfferDto(b.getId(), b.getSellerUsername(), b.getBookCondition(), b.getPriceWon()))
+                .toList();
     }
 
     @GetMapping("/infinite")
