@@ -480,6 +480,7 @@ public class BookController {
 
     public record BookDetailInfoResponse(
             String isbn13,
+            String itemId,
             String description,
             String categoryName,
             String pubDate,
